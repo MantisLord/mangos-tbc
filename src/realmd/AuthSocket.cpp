@@ -917,6 +917,7 @@ void AuthSocket::LoadRealmlist(ByteBuffer& pkt, uint32 acctid, uint8 securityLev
                     buildInfo = &i.second.realmBuildInfo;
 
                 RealmFlags realmflags = i.second.realmflags;
+                uint8 timezone = i.second.timezone;
 
                 // Don't display higher security realms for players.
                 if (!securityLevel && i.second.allowedSecurityLevel > 0)
@@ -989,10 +990,15 @@ void AuthSocket::LoadRealmlist(ByteBuffer& pkt, uint32 acctid, uint8 securityLev
                 uint8 lock = (i.second.allowedSecurityLevel > _accountSecurityLevel) ? 1 : 0;
 
                 RealmFlags realmFlags = i.second.realmflags;
+                uint8 timezone = i.second.timezone;
 
                 // Show offline state for unsupported client builds
                 if (!ok_build)
                     realmFlags = RealmFlags(realmFlags | REALM_FLAG_OFFLINE);
+
+                // Hide invalid realms (particularly different expansions)
+                if (!ok_build)
+                    timezone = 0;
 
                 if (!buildInfo)
                     realmFlags = RealmFlags(realmFlags & ~REALM_FLAG_SPECIFYBUILD);

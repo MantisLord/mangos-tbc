@@ -406,3 +406,49 @@ void Mail::prepareTemplateItems(Player* receiver)
 }
 
 /*! @} */
+
+void WorldSession::SendExternalMails()
+{
+    auto result = CharacterDatabase.Query("SELECT id, receiver, `subject`, message, money, item, item_count FROM mail_external");
+    if (result)
+    {
+        do
+        {
+            Field* fields = result->Fetch();
+            uint32 id = fields[0].GetUInt32();
+            uint32 receiverGuid = fields[1].GetUInt32();
+            std::string subject = fields[2].GetString();
+            std::string message = fields[3].GetString();
+            uint32 money = fields[4].GetUInt32();
+            uint32 ItemId = fields[5].GetUInt32();
+            uint32 ItemCount = fields[6].GetUInt32();
+
+            Player* receiver = sObjectMgr.GetPlayer(ObjectGuid(HIGHGUID_PLAYER, receiverGuid), true);
+            if (receiver)
+            {
+                // If deletion fails, don't deliver mail. We do this instead of a transaction since SendMailTo will
+                // create another transactions, and dual transactions will crash in CMaNGOS.
+                if (!CharacterDatabase.PExecute("DELETE FROM mail_external WHERE id = %u", id))
+                    return;
+
+                uint32 itemTextId = !message.empty() ? sObjectMgr.CreateItemText(message) : 0;
+                if (ItemId)
+                {
+                    Item* ToMailItem = Item::CreateItem(ItemId, ItemCount, receiver);
+                    ToMailItem->SaveToDB();
+
+                    MailDraft(subject, itemTextId)
+                        .AddItem(ToMailItem)
+                        .SetMoney(money)
+                        .SendMailTo(MailReceiver(receiver), MailSender(MAIL_NORMAL, uint32(0), MAIL_STATIONERY_GM), MAIL_CHECK_MASK_RETURNED);
+                }
+                else
+                {
+                    MailDraft(subject, itemTextId)
+                        .SetMoney(money)
+                        .SendMailTo(MailReceiver(receiver), MailSender(MAIL_NORMAL, uint32(0), MAIL_STATIONERY_GM), MAIL_CHECK_MASK_RETURNED);
+                }
+            }
+        } while (result->NextRow());
+    }
+}

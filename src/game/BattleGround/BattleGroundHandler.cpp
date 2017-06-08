@@ -576,12 +576,6 @@ void WorldSession::HandleLeaveBattlefieldOpcode(WorldPacket& recv_data)
     if (bgTypeId >= MAX_BATTLEGROUND_TYPE_ID)               // cheating - but not important in this case
         return;
 
-    // not allow leave battleground in combat
-    if (_player->IsInCombat())
-        if (BattleGround* bg = _player->GetBattleGround())
-            if (bg->GetStatus() != STATUS_WAIT_LEAVE)
-                return;
-
     _player->LeaveBattleground();
 }
 
@@ -656,6 +650,16 @@ void WorldSession::HandleBattlefieldStatusOpcode(WorldPacket& /*recv_data*/)
         }
     });
 
+    // Special custom case for spectators since they're not in any queue.
+    if (_player->IsSpectator() && _player->InBattleGround())
+    {
+        if (BattleGround* bg = _player->GetBattleGround())
+        {
+            WorldPacket status;
+            sBattleGroundMgr.BuildBattleGroundStatusPacket(status, bg, bg->GetTypeId(), bg->GetClientInstanceId(), bg->IsRated(), bg->GetMapId(), 0, STATUS_IN_PROGRESS, bg->GetEndTime(), bg->GetStartTime(), bg->GetArenaType(), TEAM_NONE);
+            _player->GetSession()->SendPacket(status);
+        }
+    }
 }
 
 // Sent by client when requesting the spirit healer

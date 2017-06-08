@@ -487,6 +487,8 @@ class ObjectMgr
         std::unordered_map<uint32, std::pair<bool, std::vector<uint32>>> const& GetCreatureSpawnEntry() const { return m_creatureSpawnEntryMap; }
 
         std::vector<uint32> LoadGameobjectInfo();
+        std::set<TrainerSpell> const& GetTrainerSpells() const { return mTrainerSpellSet; }
+        std::set<uint32> const& GetEquipmentTemplateEntrySet() const { return mEquipmentTemplateEntrySet; }
 
         void PackGroupIds();
         Group* GetGroupById(uint32 id) const;
@@ -703,6 +705,7 @@ class ObjectMgr
         void LoadItemPrototypes();
         void LoadItemRequiredTarget();
         void LoadItemLocales();
+        void LoadTransmogrifications();
         void LoadQuestLocales();
         void LoadGossipTextLocales();
         void LoadQuestgiverGreeting();
@@ -769,6 +772,8 @@ class ObjectMgr
         void LoadTrainerTemplates();
         void LoadTrainers() { LoadTrainers("npc_trainer", false); }
 
+        ItemFakeEntryContainer _itemFakeEntryStore;
+
         void LoadFactions();
 
         void LoadBroadcastText();
@@ -814,6 +819,7 @@ class ObjectMgr
         uint32 GenerateArenaTeamId() { return m_ArenaTeamIds.Generate(); }
         uint32 GenerateAuctionID() { return m_AuctionIds.Generate(); }
         uint32 GenerateGuildId() { return m_GuildIds.Generate(); }
+        uint32 GenerateArenaMatchId() { return m_ArenaMatchId.Generate(); }
         uint32 GenerateItemTextID() { return m_ItemTextIds.Generate(); }
         uint32 GenerateMailID() { return m_MailIds.Generate(); }
         uint32 GeneratePetNumber() { return m_PetNumbers.Generate(); }
@@ -1246,6 +1252,12 @@ class ObjectMgr
         uint32 GetMaxCreatureDbGuid() const { return m_maxCreatureDbGuid; }
 
         uint32 GetTypeFlagsFromStaticFlags(CreatureTypeFlags typeFlags, uint32 staticFlags1, uint32 staticFlags2, uint32 staticFlags3, uint32 staticFlags4) const;
+        
+        void LoadSpellDisabledEntrys();
+        bool IsPlayerSpellDisabled(uint32 spellid) { return (m_disabledPlayerSpells.count(spellid) != 0); }
+        bool IsCreatureSpellDisabled(uint32 spellid) { return (m_disabledCreatureSpells.count(spellid) != 0); }
+        bool IsPetSpellDisabled(uint32 spellid) { return (m_disabledPetSpells.count(spellid) != 0); }
+
     protected:
 
         // current locale settings
@@ -1255,6 +1267,7 @@ class ObjectMgr
         IdGenerator<uint32> m_ArenaTeamIds;
         IdGenerator<uint32> m_AuctionIds;
         IdGenerator<uint32> m_GuildIds;
+        IdGenerator<uint32> m_ArenaMatchId;
         IdGenerator<uint32> m_ItemTextIds;
         IdGenerator<uint32> m_MailIds;
         IdGenerator<uint32> m_PetNumbers;
@@ -1306,6 +1319,9 @@ class ObjectMgr
         std::unordered_map<uint32, std::pair<bool, std::vector<uint32>>> m_gameobjectSpawnEntryMap;
         std::unordered_map<uint32, GameObjectTemplateAddon> m_gameobjectAddonTemplates;
 		
+        std::set<TrainerSpell> mTrainerSpellSet;
+        std::set<uint32> mEquipmentTemplateEntrySet;
+
         PointOfInterestMap  mPointsOfInterest;
 
         PetCreateSpellMap   mPetCreateSpell;
@@ -1330,6 +1346,9 @@ class ObjectMgr
         QuestRelationsMap       m_GOQuestRelations;
         QuestRelationsMap       m_GOQuestInvolvedRelations;
 
+        std::set<uint32>        m_disabledPlayerSpells;
+        std::set<uint32>        m_disabledCreatureSpells;
+        std::set<uint32>        m_disabledPetSpells;
     private:
         void LoadCreatureAddons(SQLStorage& creatureaddons, char const* entryName, char const* comment);
         void ConvertCreatureAddonAuras(CreatureDataAddon* addon, char const* table, char const* guidEntryStr);

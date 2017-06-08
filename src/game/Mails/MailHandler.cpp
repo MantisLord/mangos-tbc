@@ -156,6 +156,14 @@ void WorldSession::HandleSendMail(WorldPacket& recv_data)
         return;
     }
 
+    // Check message for spam contents. Send OK and remove gold to not alert spammer.
+    if (sWorld.ChatMessageIsFiltered(subject) || sWorld.ChatMessageIsFiltered(body))
+    {
+        pl->ModifyMoney(-int32(reqmoney));
+        pl->SendMailResult(0, MAIL_SEND, MAIL_OK);
+        return;
+    }
+
     Player* receive = sObjectMgr.GetPlayer(rc);
 
     Team rc_team;

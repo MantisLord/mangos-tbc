@@ -51,6 +51,43 @@ enum SpellCategories
     SPELLCATEGORY_DEVOUR_MAGIC        = 12
 };
 
+// Spell clasification
+enum SpellSpecific
+{
+    SPELL_NORMAL,
+    SPELL_FOOD,
+    SPELL_DRINK,
+    SPELL_FOOD_AND_DRINK,
+    SPELL_WELL_FED,
+    SPELL_FLASK_ELIXIR,
+    SPELL_SEAL,
+    SPELL_JUDGEMENT,
+    SPELL_BLESSING,
+    SPELL_AURA,
+    SPELL_STING,
+    SPELL_ASPECT,
+    SPELL_TRACKER,
+    SPELL_CURSE,
+    SPELL_MAGE_ARMOR,
+    SPELL_WARLOCK_ARMOR,
+    SPELL_ELEMENTAL_SHIELD,
+    SPELL_BUFF_CASTER_POWER,
+    // TBC+ specifics:
+    SPELL_BATTLE_ELIXIR,
+    SPELL_GUARDIAN_ELIXIR,
+    SPELL_SHOUT_BUFF,
+    SPELL_CORRUPTION,
+};
+
+enum SpellDisableTypes
+{
+    SPELL_DISABLE_PLAYER = 1,
+    SPELL_DISABLE_CREATURE = 2,
+    SPELL_DISABLE_PET = 4
+};
+
+SpellSpecific GetSpellSpecific(uint32 spellId);
+
 // Different spell properties
 inline float GetSpellRadius(SpellRadiusEntry const* radius) { return (radius ? radius->Radius : 0); }
 uint32 GetSpellCastTime(SpellEntry const* spellInfo, WorldObject* caster, Spell* spell = nullptr, bool consume = false);

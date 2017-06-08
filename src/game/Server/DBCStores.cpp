@@ -383,6 +383,16 @@ void LoadDBCStores(const std::string& dataPath)
             sMapStore.EraseEntry(550);
             sMapStore.InsertEntry(tempestKeepMap, 550);
         }
+        
+        // custom - Azshara Crater (make instanceable)
+        if (MapEntry const* mEntry = sMapStore.LookupEntry(550))
+        {
+            mEntry = sMapStore.LookupEntry(37);
+            MapEntry* azsharaCraterMap = new MapEntry(*mEntry);
+            azsharaCraterMap->map_type = MAP_INSTANCE;
+            sMapStore.EraseEntry(37);
+            sMapStore.InsertEntry(azsharaCraterMap, 37);
+        }
     }
     LoadDBC(availableDbcLocales, bar, bad_dbc_files, sQuestSortStore,           dbcPath, "QuestSort.dbc");
     LoadDBC(availableDbcLocales, bar, bad_dbc_files, sRandomPropertiesPointsStore, dbcPath, "RandPropPoints.dbc");

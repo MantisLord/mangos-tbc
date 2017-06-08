@@ -141,6 +141,11 @@ enum SaveIds
     SAVE_ID_QUEL_DANAS = 20,
     SAVE_ID_EXPANSION_RELEASE = 21,
     SAVE_ID_HIGHLORD_KRUUL = 22,
+
+    // custom voa
+    SAVE_ID_BOOST_RESTRICTIONS = 1000,
+    SAVE_ID_SERVER_FIRST_FIRST = 1001,
+    // reserved 1001 + SERVER_FIRST_MAX
 };
 
 enum GameEvents
@@ -205,6 +210,19 @@ enum GameEvents
     GAME_EVENT_SWP_GATES_PHASE_1 = 317, // First Gate Open
     GAME_EVENT_SWP_GATES_PHASE_2 = 318, // Second Gate Open
     GAME_EVENT_SWP_GATES_PHASE_3 = 319, // All Gates Open
+
+    // custom
+    GAME_EVENT_LEVEL_BOOST_RESTRICTION_TBC_RACES        = 9001,
+    GAME_EVENT_LEVEL_BOOST_RESTRICTION_HORDE_RACES      = 9002,
+    GAME_EVENT_LEVEL_BOOST_RESTRICTION_ALLIANCE_RACES   = 9003,
+};
+
+enum BoostRestriction
+{
+    BOOST_FLAG_TBC_RACES        = 0x01,
+    BOOST_FLAG_HORDE_RACES      = 0x02,
+    BOOST_FLAG_ALLIANCE_RACES   = 0x04,
+    BOOST_FLAG_MAX = 0x08,
 };
 
 enum AQResources
@@ -272,6 +290,41 @@ enum AQSilithusBoss
     AQ_SILITHUS_BOSS_ZORA  = 2,
 };
 
+enum ServerFirst
+{
+    SERVER_FIRST_LEVEL_65,
+    SERVER_FIRST_LEVEL_66,
+    SERVER_FIRST_LEVEL_67,
+    SERVER_FIRST_LEVEL_68,
+    SERVER_FIRST_LEVEL_69,
+    SERVER_FIRST_LEVEL_70,
+
+    // ally
+    SERVER_FIRST_70_RACE_HUMAN,
+    SERVER_FIRST_70_RACE_DWARF,
+    SERVER_FIRST_70_RACE_GNOME,
+    SERVER_FIRST_70_RACE_NELF,
+    SERVER_FIRST_70_RACE_DRAENEI,
+    // horde
+    SERVER_FIRST_70_RACE_ORC,
+    SERVER_FIRST_70_RACE_TAUREN,
+    SERVER_FIRST_70_RACE_UNDEAD,
+    SERVER_FIRST_70_RACE_TROLL,
+    SERVER_FIRST_70_RACE_BELF,
+
+    SERVER_FIRST_70_PRIEST,
+    SERVER_FIRST_70_MAGE,
+    SERVER_FIRST_70_WARLOCK,
+    SERVER_FIRST_70_ROGUE,
+    SERVER_FIRST_70_DRUID,
+    SERVER_FIRST_70_HUNTER,
+    SERVER_FIRST_70_SHAMAN,
+    SERVER_FIRST_70_WARRIOR,
+    SERVER_FIRST_70_PALADIN,
+    SERVER_FIRST_MAX,
+};
+
+// To be used
 struct AhnQirajData
 {
     uint32 m_phase;
@@ -582,6 +635,14 @@ class WorldState
         void SetBonfireActive(uint32 entry, bool team, bool apply);
         void SetBonfireZone(uint32 entry, uint32 zoneId, bool team);
 
+        // custom voa
+        uint32 IsTbcRaceBoostRestricted() { return m_restrictedTbcRacesBoosts; }
+        void SetTbcRaceBoostRestriction(uint32 flags);
+        void StartRestrictionEvent();
+        void PlayerLevelledUp(uint32 level, const std::string& name, uint8 race, uint8 plClass);
+        void CheckPlayerLevelupAndBroadcast(ServerFirst id, uint32 level, const std::string& name);
+        std::string GetServerFirstString() const;
+
         void FillInitialWorldStates(ByteBuffer& data, uint32& count, uint32 zoneId, uint32 areaId);
 
         // helper functions for world state list fill
@@ -652,6 +713,10 @@ class WorldState
         bool m_highlordKruulSpawned;
         uint32 m_highlordKruulTimer;
         uint8 m_highlordKruulChosenPosition;
+
+        // custom voa
+        std::atomic<uint32> m_restrictedTbcRacesBoosts;
+        std::vector<std::string> m_serverFirsts;
 };
 
 #define sWorldState MaNGOS::Singleton<WorldState>::Instance()

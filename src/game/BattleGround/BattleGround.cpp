@@ -406,9 +406,15 @@ void BattleGround::Update(uint32 diff)
                 BattleGroundTypeId BgTypeId = GetTypeId();
 
                 if (!IsArena())
-                    sWorld.SendWorldText(LANG_BG_STARTED_ANNOUNCE_WORLD, GetName(), sBattleGroundMgr.GetMinLevelForBattleGroundBracketId(bracketId, BgTypeId), sBattleGroundMgr.GetMaxLevelForBattleGroundBracketId(bracketId, BgTypeId));
+                {
+                    sWorld.SendWorldTextPvpMessage(LANG_BG_STARTED_ANNOUNCE_WORLD, GetName(), sBattleGroundMgr.GetMinLevelForBattleGroundBracketId(bracketId, BgTypeId), sBattleGroundMgr.GetMaxLevelForBattleGroundBracketId(bracketId, BgTypeId));
+                    sLog.outAnnounceLog("[BG Queue Announcer]: %s -- [%u-%u] Started!", GetName(), sBattleGroundMgr.GetMinLevelForBattleGroundBracketId(bracketId, BgTypeId), sBattleGroundMgr.GetMaxLevelForBattleGroundBracketId(bracketId, BgTypeId));
+                }
                 else
-                    sWorld.SendWorldText(LANG_ARENA_STARTED_ANNOUNCE_WORLD, GetName(), GetArenaType(), GetArenaType());
+                {
+                    sWorld.SendWorldTextPvpMessage(LANG_ARENA_STARTED_ANNOUNCE_WORLD, GetName(), GetArenaType(), GetArenaType());
+                    sLog.outAnnounceLog("[Arena Queue Announcer]: %s -- [%u-%u] Started!", GetName(), GetArenaType(), GetArenaType());
+                }
             }
         }
         // After 1 minute or 30 seconds, warning is signalled
@@ -528,6 +534,11 @@ void BattleGround::SendPacketToAll(WorldPacket const& packet) const
         else
             sLog.outError("BattleGround:SendPacketToAll: %s not found!", itr->first.GetString().c_str());
     }
+
+    // Let spectators receive BG updates too.
+    for (BattleGroundSpectatorMap::const_iterator itr = m_Spectators.begin(); itr != m_Spectators.end(); ++itr)
+        if (Player* plr = sObjectMgr.GetPlayer(itr->first))
+            plr->GetSession()->SendPacket(packet);
 }
 
 /**
@@ -799,6 +810,8 @@ void BattleGround::EndBattleGround(Team winner)
     // we must set it this way, because end time is sent in packet!
     m_endTime = TIME_TO_AUTOREMOVE;
 
+    uint32 arenaMatchId = 0;
+
     // arena rating calculation
     if (IsArena() && IsRated())
     {
@@ -815,6 +828,20 @@ void BattleGround::EndBattleGround(Team winner)
                 DEBUG_LOG("--- Winner rating: %u, Loser rating: %u, Winner change: %i, Loser change: %i ---", winner_rating, loser_rating, winner_change, loser_change);
                 SetArenaTeamRatingChangeForTeam(winner, winner_change);
                 SetArenaTeamRatingChangeForTeam(GetOtherTeam(winner), loser_change);
+                sLog.outArena("Arena match Type: %u for Team1Id: %u - Team2Id: %u ended. WinnerTeamId: %u. Winner rating: %u, Loser rating: %u. RatingChange: %i.", m_arenaType, m_arenaTeamIds[TEAM_INDEX_ALLIANCE], m_arenaTeamIds[TEAM_INDEX_HORDE], winner_arena_team->GetId(), winner_rating, loser_rating, winner_change);
+
+                arenaMatchId = sObjectMgr.GenerateArenaMatchId();
+                CharacterDatabase.PExecute("INSERT INTO `arena_matches` (matchid, winner_teamid, loser_teamid, map, time, duration, winner_rating, loser_rating, winner_rating_change, loser_rating_change) VALUES (%lu, %u, %u, %u, NOW(), %u, %u, %u, %i, %i)",
+                    arenaMatchId,
+                    winner_arena_team->GetId(),
+                    loser_arena_team->GetId(),
+                    m_mapId,
+                    GetStartTime() / IN_MILLISECONDS,
+                    winner_rating,
+                    loser_rating,
+                    winner_change,
+                    loser_change
+                );
             }
             else
             {
@@ -891,6 +918,23 @@ void BattleGround::EndBattleGround(Team winner)
                 loser_arena_team->MemberLost(plr, winner_rating);
         }
 
+        if (IsArena() && IsRated())
+        {
+            BattleGroundScoreMap::iterator score = m_playerScores.find(m_Player.first);
+            BattleGroundScore *pScore = score->second;
+            sLog.outArena("Statistics for %s (GUID: %u, Team: %u, IP: %s): %u damage, %u healing, %u killing blows", plr->GetName(), plr->GetGUIDLow(), plr->GetArenaTeamId(m_arenaType == 5 ? 2 : m_arenaType == 3), plr->GetSession()->GetRemoteAddress().c_str(), pScore->GetDamageDone(), pScore->GetHealingDone(), pScore->GetKillingBlows());
+
+            // Log individual player stats for match.
+            CharacterDatabase.PExecute("INSERT INTO `arena_match_players` (matchid, character_guid, teamid, score_killing_blows, score_damage_done, score_healing_done) VALUES (%lu, %lu, %u, %u, %u, %u)",
+                arenaMatchId,
+                plr->GetObjectGuid(),
+                plr->GetArenaTeamId(m_arenaType == 5 ? 2 : m_arenaType == 3),
+                pScore->GetKillingBlows(),
+                pScore->GetDamageDone(),
+                pScore->GetHealingDone()
+            );
+        }
+
         // store battleground score statistics for each player
         if (IsBattleGround() && sWorld.getConfig(CONFIG_BOOL_BATTLEGROUND_SCORE_STATISTICS))
         {
@@ -934,6 +978,18 @@ void BattleGround::EndBattleGround(Team winner)
         BattleGroundQueueTypeId bgQueueTypeId = BattleGroundMgr::BgQueueTypeId(GetTypeId(), GetArenaType());
         sBattleGroundMgr.BuildBattleGroundStatusPacket(data, true, GetTypeId(), GetClientInstanceId(), IsRated(), GetMapId(), plr->GetBattleGroundQueueIndex(bgQueueTypeId), STATUS_IN_PROGRESS, TIME_TO_AUTOREMOVE, GetStartTime(), GetArenaType(), plr->GetBGTeam());
         plr->GetSession()->SendPacket(data);
+    }
+
+    for (auto& m_Spectator : m_Spectators)
+    {
+        if (Player* plr = sObjectMgr.GetPlayer(m_Spectator.first))
+        {
+            sBattleGroundMgr.BuildPvpLogDataPacket(data, this);
+            plr->GetSession()->SendPacket(data);
+
+            sBattleGroundMgr.BuildBattleGroundStatusPacket(data, true, GetTypeId(), GetClientInstanceId(), IsRated(), GetMapId(), 0, STATUS_IN_PROGRESS, TIME_TO_AUTOREMOVE, GetStartTime(), GetArenaType(), plr->GetBGTeam());
+            plr->GetSession()->SendPacket(data);
+        }
     }
 
     if (IsArena() && IsRated() && winner_arena_team && loser_arena_team)
@@ -1195,6 +1251,11 @@ void BattleGround::RemovePlayerAtLeave(ObjectGuid playerGuid, bool isOnTransport
         }
     }
 
+    // Check if player is a spectator and remove them, if so.
+    BattleGroundSpectatorMap::iterator itr3 = m_Spectators.find(playerGuid);
+    if (itr3 != m_Spectators.end())
+        m_Spectators.erase(itr3);
+
     Player* player = sObjectMgr.GetPlayer(playerGuid);
 
     if (player)
@@ -1316,6 +1377,10 @@ void BattleGround::RemovePlayerAtLeave(ObjectGuid playerGuid, bool isOnTransport
         if (isOnTransport)
             player->TeleportToBGEntryPoint();
 
+        // Remove spectator flags on leave
+        if (player->IsSpectator())
+            player->SetSpectator(false);
+
         DETAIL_LOG("BATTLEGROUND: Removed player %s from BattleGround.", player->GetName());
     }
 
@@ -1366,6 +1431,9 @@ void BattleGround::StartBattleGround()
     SetStartTime(0);
 
     // expects to be already added in free queue
+
+    if (m_isRated)
+        sLog.outArena("Arena match type: %u for Team1Id: %u - Team2Id: %u started.", m_arenaType, m_arenaTeamIds[TEAM_INDEX_ALLIANCE], m_arenaTeamIds[TEAM_INDEX_HORDE]);
 
     // add bg to update list
     // This must be done here, because we need to have already invited some players when first BG::Update() method is executed
@@ -1434,6 +1502,13 @@ void BattleGround::AddPlayer(Player* player)
     {
         if (GetStatus() == STATUS_WAIT_JOIN)                // not started yet
             player->CastSpell(player, SPELL_PREPARATION, TRIGGERED_OLD_TRIGGERED);   // reduces all mana cost of spells.
+
+        // Custom - reset CDs and max powers on join.
+        if (sWorld.getConfig(CONFIG_BOOL_RESET_POWERS_COOLDOWNS_ON_BG_JOIN))
+        {
+            player->DuelResetPowers();
+            player->RemoveArenaSpellCooldowns();
+        }
     }
 
     // setup BG group membership
@@ -2182,4 +2257,15 @@ Creature* BattleGround::GetSingleCreatureFromStorage(uint32 entry, bool skipDebu
         script_error_log("BattleGround requested creature with entry %u, but no npc of this entry was created yet, or it was not stored by script for map %u.", entry, GetBgMap()->GetId());
 
     return nullptr;
+}
+
+void BattleGround::AddSpectator(Player* player)
+{
+    ObjectGuid guid = player->GetObjectGuid();
+
+    BattleGroundPlayer bp;
+    bp.playerTeam = TEAM_NONE;
+
+    // Add to list/maps
+    m_Spectators[guid] = bp;
 }
