@@ -638,7 +638,7 @@ void Pet::SetDeathState(DeathState s)                       // overwrite virtual
         SetUInt32Value(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_NONE);
         RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
 
-        if (getPetType() != SUMMON_PET)
+        if (!sWorld.getConfig(CONFIG_BOOL_PETS_ALWAYS_HAPPY_LOYAL) && getPetType() != SUMMON_PET)
         {
             // lose happiness when died and not in BG/Arena
             MapEntry const* mapEntry = sMapStore.LookupEntry(GetMapId());
@@ -741,7 +741,8 @@ void Pet::RegenerateAll(uint32 diff)
 
     if (m_happinessTimer <= diff)
     {
-        LooseHappiness();
+        if (!sWorld.getConfig(CONFIG_BOOL_PETS_ALWAYS_HAPPY_LOYAL))
+            LooseHappiness();
         m_happinessTimer = 7500;
     }
     else
@@ -749,7 +750,8 @@ void Pet::RegenerateAll(uint32 diff)
 
     if (m_loyaltyTimer <= diff)
     {
-        TickLoyaltyChange();
+        if (!sWorld.getConfig(CONFIG_BOOL_PETS_ALWAYS_HAPPY_LOYAL))
+            TickLoyaltyChange();
         m_loyaltyTimer = 12000;
     }
     else
@@ -1112,7 +1114,7 @@ void Pet::Unsummon(PetSaveMode mode, Unit* owner /*= nullptr*/)
     m_removed = true;
 }
 
-void Pet::GivePetXP(uint32 xp)
+void Pet::GivePetXP(uint32 xp, Player* owner)
 {
     if (getPetType() != HUNTER_PET)
         return;
@@ -1122,6 +1124,8 @@ void Pet::GivePetXP(uint32 xp)
 
     if (!IsAlive())
         return;
+
+    xp *= owner->GetPlayerXPModifier();
 
     uint32 level = GetLevel();
     uint32 maxlevel = std::min(sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL), GetOwner()->GetLevel());
@@ -1150,7 +1154,8 @@ void Pet::GivePetXP(uint32 xp)
     }
 
     UpdateRequireXpForNextLoyaltyLevel(xp);
-    KillLoyaltyBonus(level);
+    if (!sWorld.getConfig(CONFIG_BOOL_PETS_ALWAYS_HAPPY_LOYAL))
+        KillLoyaltyBonus(level);
 }
 
 void Pet::GivePetLevel(uint32 level)
@@ -1195,7 +1200,7 @@ bool Pet::CreateBaseAtCreature(Creature* creature)
     SetDisplayId(creature->GetDisplayId());
     SetNativeDisplayId(creature->GetNativeDisplayId());
     SetMaxPower(POWER_HAPPINESS, GetCreatePowers(POWER_HAPPINESS));
-    SetPower(POWER_HAPPINESS, 166500);
+    SetPower(POWER_HAPPINESS, sWorld.getConfig(CONFIG_BOOL_PETS_ALWAYS_HAPPY_LOYAL) ? 1050000 : 166500);
     SetPowerType(POWER_FOCUS);
     SetUInt32Value(UNIT_FIELD_PET_NAME_TIMESTAMP, 0);
     SetUInt32Value(UNIT_FIELD_PETEXPERIENCE, 0);
@@ -1207,7 +1212,7 @@ bool Pet::CreateBaseAtCreature(Creature* creature)
     else
         SetName(creature->GetNameForLocaleIdx(sObjectMgr.GetDbc2StorageLocaleIndex()));
 
-    m_loyaltyPoints = 1000;
+    m_loyaltyPoints = sWorld.getConfig(CONFIG_BOOL_PETS_ALWAYS_HAPPY_LOYAL) ? 39500 : 1000;
 
     SetByteValue(UNIT_FIELD_BYTES_0, UNIT_BYTES_0_OFFSET_CLASS, CLASS_WARRIOR);
     SetByteValue(UNIT_FIELD_BYTES_0, UNIT_BYTES_0_OFFSET_GENDER, GENDER_NONE);
@@ -1220,7 +1225,7 @@ bool Pet::CreateBaseAtCreature(Creature* creature)
     SetByteValue(UNIT_FIELD_BYTES_2, UNIT_BYTES_2_OFFSET_DEBUFF_LIMIT, UNIT_BYTE2_PLAYER_CONTROLLED_DEBUFF_LIMIT);
 
     SetUInt32Value(UNIT_MOD_CAST_SPEED, creature->GetUInt32Value(UNIT_MOD_CAST_SPEED));
-    SetLoyaltyLevel(REBELLIOUS);
+    SetLoyaltyLevel(sWorld.getConfig(CONFIG_BOOL_PETS_ALWAYS_HAPPY_LOYAL) ? BEST_FRIEND : REBELLIOUS);
 
     return true;
 }
@@ -2114,18 +2119,18 @@ void Pet::CheckLearning(uint32 spellid)
 uint32 Pet::resetTalentsCost() const
 {
     uint32 days = uint32(sWorld.GetGameTime() - m_resetTalentsTime) / DAY;
-
+    uint32 cap = sWorld.getConfig(CONFIG_UINT32_MAX_RESPEC_COST) * GOLD;
     // The first time reset costs 10 silver; after 1 day cost is reset to 10 silver
     if (m_resetTalentsCost < 10 * SILVER || days > 0)
-        return 10 * SILVER;
+        return std::min(uint32(10 * SILVER), cap);
     // then 50 silver
     if (m_resetTalentsCost < 50 * SILVER)
-        return 50 * SILVER;
+        return std::min(uint32(50 * SILVER), cap);
         // then 1 gold
     if (m_resetTalentsCost < 1 * GOLD)
-        return 1 * GOLD;
+        return std::min(uint32(1 * GOLD), cap);
     // then increasing at a rate of 1 gold; cap 10 gold
-    return (m_resetTalentsCost + 1 * GOLD > 10 * GOLD ? 10 * GOLD : m_resetTalentsCost + 1 * GOLD);
+    return std::min((m_resetTalentsCost + 1 * GOLD > 10 * GOLD ? 10 * GOLD : m_resetTalentsCost + 1 * GOLD), cap);
 }
 
 CharmInfo* Pet::InitCharmInfo(Unit* charm)

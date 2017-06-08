@@ -138,6 +138,7 @@ ObjectMgr::ObjectMgr() :
     m_ArenaTeamIds("Arena team ids"),
     m_AuctionIds("Auction ids"),
     m_GuildIds("Guild ids"),
+    m_ArenaMatchId("Arena match ids"),
     m_ItemTextIds("Item text ids"),
     m_MailIds("Mail ids"),
     m_PetNumbers("Pet numbers"),
@@ -1745,6 +1746,9 @@ void ObjectMgr::LoadEquipmentTemplates()
                 const_cast<EquipmentInfo*>(eqInfo)->equipentry[j] = 0;
             }
         }
+
+        if (mEquipmentTemplateEntrySet.find(i) == mEquipmentTemplateEntrySet.end())
+            mEquipmentTemplateEntrySet.insert(i);
     }
 
     sLog.outString(">> Loaded %u equipment template", sEquipmentStorage.GetRecordCount());
@@ -2862,6 +2866,37 @@ uint32 ObjectMgr::GetPlayerAccountIdByPlayerName(const std::string& name) const
     return 0;
 }
 
+void ObjectMgr::LoadTransmogrifications()
+{
+    // disabled due to how long this can take with alot of data
+    // sLog.outString("Deleting non-existing transmogrification entries...");
+    // CharacterDatabase.Execute("DELETE FROM custom_transmogrification WHERE NOT EXISTS (SELECT 1 FROM item_instance WHERE item_instance.guid = custom_transmogrification.Guid)");
+
+    uint32 oldMSTime = WorldTimer::getMSTime();
+    _itemFakeEntryStore.clear();
+
+    auto result = CharacterDatabase.Query("SELECT Guid, FakeEntry FROM custom_transmogrification WHERE EXISTS (SELECT 1 FROM item_instance WHERE item_instance.guid = custom_transmogrification.Guid)");
+
+    if (result)
+    {
+        do
+        {
+            uint32 lowGUID = (*result)[0].GetUInt32();
+            uint32 entry = (*result)[1].GetUInt32();
+            if (GetItemPrototype(entry))
+                _itemFakeEntryStore[lowGUID] = entry;
+            else
+            {
+                sLog.outErrorDb("Item entry (Entry: %u, GUID: %u) does not exist, deleting.", entry, lowGUID);
+                CharacterDatabase.PExecute("DELETE FROM custom_transmogrification WHERE Guid = %u", lowGUID);
+            }
+        } while (result->NextRow());
+    }
+
+    sLog.outString(">> Loaded %lu Item fake entries in %u ms", (unsigned long)_itemFakeEntryStore.size(), WorldTimer::getMSTimeDiff(oldMSTime, WorldTimer::getMSTime()));
+    sLog.outString();
+}
+
 void ObjectMgr::LoadItemLocales()
 {
     mItemLocaleMap.clear();                                 // need for reload case
@@ -2965,28 +3000,31 @@ void ObjectMgr::LoadItemPrototypes()
                     sLog.outErrorDb("Item (Entry: %u) not correct %u spell id, must exist in spell table.", i, Spell.SpellId);
             }
 
-        if (dbcitem)
+        if (!(proto->ExtraFlags & ITEM_EXTRA_CUSTOM))
         {
-            if (proto->InventoryType != dbcitem->InventoryType)
+            if (dbcitem)
             {
-                sLog.outErrorDb("Item (Entry: %u) not correct %u inventory type, must be %u (still using DB value).", i, proto->InventoryType, dbcitem->InventoryType);
-                // It safe let use InventoryType from DB
-            }
+                if (proto->InventoryType != dbcitem->InventoryType)
+                {
+                    sLog.outErrorDb("Item (Entry: %u) not correct %u inventory type, must be %u (still using DB value).", i, proto->InventoryType, dbcitem->InventoryType);
+                    // It safe let use InventoryType from DB
+                }
 
-            if (proto->DisplayInfoID != dbcitem->DisplayId)
-            {
-                sLog.outErrorDb("Item (Entry: %u) not correct %u display id, must be %u (using it).", i, proto->DisplayInfoID, dbcitem->DisplayId);
-                const_cast<ItemPrototype*>(proto)->DisplayInfoID = dbcitem->DisplayId;
+                if (proto->DisplayInfoID != dbcitem->DisplayId)
+                {
+                    sLog.outErrorDb("Item (Entry: %u) not correct %u display id, must be %u (using it).", i, proto->DisplayInfoID, dbcitem->DisplayId);
+                    const_cast<ItemPrototype*>(proto)->DisplayInfoID = dbcitem->DisplayId;
+                }
+                if (proto->Sheath != dbcitem->Sheath)
+                {
+                    sLog.outErrorDb("Item (Entry: %u) not correct %u sheath, must be %u  (using it).", i, proto->Sheath, dbcitem->Sheath);
+                    const_cast<ItemPrototype*>(proto)->Sheath = dbcitem->Sheath;
+                }
             }
-            if (proto->Sheath != dbcitem->Sheath)
+            else
             {
-                sLog.outErrorDb("Item (Entry: %u) not correct %u sheath, must be %u  (using it).", i, proto->Sheath, dbcitem->Sheath);
-                const_cast<ItemPrototype*>(proto)->Sheath = dbcitem->Sheath;
+                sLog.outErrorDb("Item (Entry: %u) not correct (not listed in list of existing items).", i);
             }
-        }
-        else
-        {
-            sLog.outErrorDb("Item (Entry: %u) not correct (not listed in list of existing items).", i);
         }
 
         if (proto->Class >= MAX_ITEM_CLASS)
@@ -3734,17 +3772,14 @@ void ObjectMgr::LoadPlayerInfo()
                 Field* fields = queryResult->Fetch();
 
                 uint32 current_race = fields[0].GetUInt32();
-                uint32 current_class = fields[1].GetUInt32();
-
-                ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(current_race);
-                if (!rEntry || !((1 << (current_race - 1)) & RACEMASK_ALL_PLAYABLE))
+                if (current_race >= MAX_RACES)
                 {
                     sLog.outErrorDb("Wrong race %u in `playercreateinfo_item` table, ignoring.", current_race);
                     continue;
                 }
 
-                ChrClassesEntry const* cEntry = sChrClassesStore.LookupEntry(current_class);
-                if (!cEntry || !((1 << (current_class - 1)) & CLASSMASK_ALL_PLAYABLE))
+                uint32 current_class = fields[1].GetUInt32();
+                if (current_class >= MAX_CLASSES)
                 {
                     sLog.outErrorDb("Wrong class %u in `playercreateinfo_item` table, ignoring.", current_class);
                     continue;
@@ -3769,6 +3804,25 @@ void ObjectMgr::LoadPlayerInfo()
                 }
 
                 pInfo->item.push_back(PlayerCreateInfoItem(item_id, amount));
+
+                // Handle universal race/class.
+                if (current_race == 0)
+                {
+                    for (uint32 raceIndex = RACE_HUMAN; raceIndex < MAX_RACES; ++raceIndex)
+                    {
+                        for (uint32 classIndex = CLASS_WARRIOR; classIndex < MAX_CLASSES; ++classIndex)
+                        {
+                            if (current_class == 0 || current_class == classIndex)
+                            {
+                                if (PlayerInfo* pInfo = &playerInfo[raceIndex][classIndex])
+                                {
+                                    pInfo->item.push_back(PlayerCreateInfoItem(item_id, amount));
+                                    ++count;
+                                }
+                            }
+                        }
+                    }
+                }
 
                 bar.step();
                 ++count;
@@ -3912,17 +3966,14 @@ void ObjectMgr::LoadPlayerInfo()
                 Field* fields = queryResult->Fetch();
 
                 uint32 current_race = fields[0].GetUInt32();
-                uint32 current_class = fields[1].GetUInt32();
-
-                ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(current_race);
-                if (!rEntry || !((1 << (current_race - 1)) & RACEMASK_ALL_PLAYABLE))
+                if (current_race >= MAX_RACES)
                 {
                     sLog.outErrorDb("Wrong race %u in `playercreateinfo_spell` table, ignoring.", current_race);
                     continue;
                 }
 
-                ChrClassesEntry const* cEntry = sChrClassesStore.LookupEntry(current_class);
-                if (!cEntry || !((1 << (current_class - 1)) & CLASSMASK_ALL_PLAYABLE))
+                uint32 current_class = fields[1].GetUInt32();
+                if (current_class >= MAX_CLASSES)
                 {
                     sLog.outErrorDb("Wrong class %u in `playercreateinfo_spell` table, ignoring.", current_class);
                     continue;
@@ -3937,6 +3988,25 @@ void ObjectMgr::LoadPlayerInfo()
 
                 PlayerInfo* pInfo = &playerInfo[current_race][current_class];
                 pInfo->spell.push_back(spell_id);
+
+                // Handle universal race/class.
+                if (current_race == 0)
+                {
+                    for (uint32 raceIndex = RACE_HUMAN; raceIndex < MAX_RACES; ++raceIndex)
+                    {
+                        for (uint32 classIndex = CLASS_WARRIOR; classIndex < MAX_CLASSES; ++classIndex)
+                        {
+                            if (current_class == 0 || current_class == classIndex)
+                            {
+                                if (PlayerInfo* pInfo = &playerInfo[raceIndex][classIndex])
+                                {
+                                    pInfo->spell.push_back(spell_id);
+                                    ++count;
+                                }
+                            }
+                        }
+                    }
+                }
 
                 bar.step();
                 ++count;
@@ -7255,6 +7325,12 @@ void ObjectMgr::SetHighestGuids()
         m_FirstTemporaryGameObjectGuid = (*result)[0].GetUInt32() + 1;
     }
 
+    result = CharacterDatabase.Query("SELECT MAX(matchid) FROM arena_matches");
+    if (result)
+    {
+        m_ArenaMatchId.Set((*result)[0].GetUInt32() + 1);
+    }
+
     result = CharacterDatabase.Query("SELECT MAX(id) FROM auction");
     if (result)
     {
@@ -9506,6 +9582,9 @@ void ObjectMgr::LoadTrainers(char const* tableName, bool isTemplates)
         if (SpellMgr::IsProfessionSpell(spell))
             data.trainerType = 2;
 
+        if (mTrainerSpellSet.find(trainerSpell) == mTrainerSpellSet.end())
+            mTrainerSpellSet.insert(trainerSpell);
+
         ++count;
     }
     while (queryResult->NextRow());
@@ -10621,4 +10700,46 @@ bool DoDisplayText(WorldObject* source, int32 entry, Unit const* target, uint32 
 
     source->MonsterText(content, type, lang, target);
     return true;
+}
+
+void ObjectMgr::LoadSpellDisabledEntrys()
+{
+    m_disabledPlayerSpells.clear();                                // need for reload case
+    m_disabledCreatureSpells.clear();
+    m_disabledPetSpells.clear();
+    auto result = WorldDatabase.Query("SELECT entry, disable_mask FROM spell_disabled");
+
+    uint32 total_count = 0;
+
+    if (!result)
+    {
+        sLog.outString();
+        sLog.outString(">> Loaded %u disabled spells", total_count);
+
+        return;
+    }
+
+    Field* fields;
+    do
+    {
+        fields = result->Fetch();
+        uint32 spellid = fields[0].GetUInt32();
+        if (!GetSpellStore()->LookupEntry<SpellEntry>(spellid))
+        {
+            sLog.outErrorDb("Spell entry %u from spell_disabled doesn't exist in dbc, ignoring.", spellid);
+            continue;
+        }
+
+        uint32 disable_mask = fields[1].GetUInt32();
+        if (disable_mask & SPELL_DISABLE_PLAYER)
+            m_disabledPlayerSpells.insert(spellid);
+        if (disable_mask & SPELL_DISABLE_CREATURE)
+            m_disabledCreatureSpells.insert(spellid);
+        if (disable_mask & SPELL_DISABLE_PET)
+            m_disabledPetSpells.insert(spellid);
+        ++total_count;
+    } while (result->NextRow());
+
+    sLog.outString();
+    sLog.outString(">> Loaded %u disabled spells from spell_disabled", total_count);
 }

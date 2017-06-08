@@ -1388,7 +1388,7 @@ namespace MaNGOS
             WorldObject const& GetFocusObject() const { return *i_obj; }
             bool operator()(Player* u)
             {
-                return u->IsAlive() && i_obj->IsWithinDistInMap(u, i_range);
+                return !u->IsSpectator() && u->IsAlive() && i_obj->IsWithinDistInMap(u, i_range);
             }
         private:
             WorldObject const* i_obj;

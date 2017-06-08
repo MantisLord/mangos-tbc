@@ -330,9 +330,9 @@ class WorldSession
         void SendNameQueryResponseFromDB(ObjectGuid guid) const;
         static void SendNameQueryResponseFromDBCallBack(QueryResult* result, uint32 accountId);
 
-        void SendTrainerList(ObjectGuid guid) const;
+        void SendTrainerList(ObjectGuid guid, uint32 entry = 0) const;
 
-        void SendListInventory(ObjectGuid guid) const;
+        void SendListInventory(ObjectGuid guid, uint32 entry = 0) const;
         bool CheckBanker(ObjectGuid guid) const;
         void SendShowBank(ObjectGuid guid) const;
         bool CheckMailBox(ObjectGuid guid) const;
@@ -380,6 +380,9 @@ class WorldSession
                     m_tutorialState = TUTORIALDATA_CHANGED;
             }
         }
+
+        // External Mail
+        static void SendExternalMails();
 
         // auction
         void SendAuctionHello(Unit* unit) const;
