@@ -1821,6 +1821,9 @@ void Map::TeleportAllPlayersTo(TeleportLocation loc)
                     plr->TeleportToHomebind();
                     break;
                 case TELEPORT_LOCATION_BG_ENTRY_POINT:
+                    if (plr->IsSpectator())
+                        plr->SetSpectator(false);
+
                     plr->TeleportToBGEntryPoint();
                     break;
                 default:

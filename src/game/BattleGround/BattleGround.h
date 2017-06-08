@@ -375,8 +375,10 @@ class BattleGround
 
         // Functions that handle battleground players
         typedef std::map<ObjectGuid, BattleGroundPlayer> BattleGroundPlayerMap;
+        typedef std::map<ObjectGuid, BattleGroundPlayer> BattleGroundSpectatorMap;
         BattleGroundPlayerMap const& GetPlayers() const { return m_players; }
         uint32 GetPlayersSize() const { return m_players.size(); }
+        BattleGroundSpectatorMap const& GetSpectators() const { return m_Spectators; }
 
         // Functions that handle battleground scores
         typedef std::map<ObjectGuid, BattleGroundScore*> BattleGroundScoreMap;
@@ -537,6 +539,8 @@ class BattleGround
         // Called when player joins the battleground after the initial load
         virtual void AddPlayer(Player* /*player*/);                     // must be implemented in BG subclass
 
+        virtual void AddSpectator(Player* player);
+
         void AddOrSetPlayerToCorrectBgGroup(Player* /*player*/, ObjectGuid /*playerGuid*/, Team /*team*/);
 
         // Called when player leaves battleground
@@ -634,6 +638,8 @@ class BattleGround
 
         /* Player lists, those need to be accessible by inherited classes */
         BattleGroundPlayerMap  m_players;
+
+        BattleGroundSpectatorMap m_Spectators;
 
         /*
         these are important variables used for starting messages

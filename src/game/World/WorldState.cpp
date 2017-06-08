@@ -110,7 +110,8 @@ std::vector<std::pair<WorldStateID, uint32>> aqWorldStateTotalsMap =
 };
 
 WorldState::WorldState() : m_emeraldDragonsState(0xF), m_emeraldDragonsTimer(0), m_emeraldDragonsChosenPositions(4, 0), m_isMagtheridonHeadSpawnedHorde(false), m_isMagtheridonHeadSpawnedAlliance(false),
-    m_adalSongOfBattleTimer(0), m_expansion(EXPANSION_TBC), m_highlordKruulSpawned(false), m_highlordKruulTimer(0), m_highlordKruulChosenPosition(0)
+    m_adalSongOfBattleTimer(0), m_expansion(EXPANSION_TBC), m_restrictedTbcRacesBoosts(0), m_highlordKruulSpawned(false), m_highlordKruulTimer(0), m_highlordKruulChosenPosition(0),
+    m_serverFirsts(SERVER_FIRST_MAX)
 {
     m_transportStates[GROMGOL_UNDERCITY]    = GROMGOLUC_EVENT_1;
     m_transportStates[GROMGOL_ORGRIMMAR]    = OGUC_EVENT_1;
@@ -250,6 +251,16 @@ void WorldState::Load()
                     else
                         m_expansion = sWorld.getConfig(CONFIG_UINT32_EXPANSION);
                     break;
+                case SAVE_ID_BOOST_RESTRICTIONS:
+                    if (data.size())
+                    {
+                        uint32 restricted;
+                        loadStream >> restricted;
+                        m_restrictedTbcRacesBoosts = restricted;
+                    }
+                    else
+                        m_restrictedTbcRacesBoosts = 0;
+                    break;
                 case SAVE_ID_LOVE_IS_IN_THE_AIR:
                     if (data.size())
                     {
@@ -292,6 +303,14 @@ void WorldState::Load()
                         }
                     }
                     break;
+                default:
+                {
+                    if (id >= SAVE_ID_SERVER_FIRST_FIRST && id < SAVE_ID_SERVER_FIRST_FIRST + SERVER_FIRST_MAX)
+                    {
+                        m_serverFirsts[id - SAVE_ID_SERVER_FIRST_FIRST] = data;
+                    }
+                    break;
+                }
             }
         }
         while (result->NextRow());
@@ -308,6 +327,9 @@ void WorldState::Load()
     StartSunwellGatePhase();
     HandleSunsReachSubPhaseTransition(m_sunsReachData.m_subphaseMask, true);
     StartExpansionEvent();
+
+    // custom
+    StartRestrictionEvent();
 }
 
 void WorldState::Save(SaveIds saveId)
@@ -349,6 +371,12 @@ void WorldState::Save(SaveIds saveId)
             SaveHelper(expansionData, SAVE_ID_EXPANSION_RELEASE);
             break;
         }
+        case SAVE_ID_BOOST_RESTRICTIONS:
+        {
+            std::string restrictionData = std::to_string(m_restrictedTbcRacesBoosts);
+            SaveHelper(restrictionData, SAVE_ID_BOOST_RESTRICTIONS);
+            break;
+        }
         case SAVE_ID_LOVE_IS_IN_THE_AIR:
         {
             std::string loveData;
@@ -367,7 +395,12 @@ void WorldState::Save(SaveIds saveId)
             SaveHelper(siData, SAVE_ID_SCOURGE_INVASION);
             break;
         }
-        default: break;
+        default:
+        {
+            if (saveId >= SAVE_ID_SERVER_FIRST_FIRST && saveId < SAVE_ID_SERVER_FIRST_FIRST + SERVER_FIRST_MAX)
+                SaveHelper(m_serverFirsts[saveId - SAVE_ID_SERVER_FIRST_FIRST], saveId);
+            break;
+        }
     }
 }
 
@@ -2653,6 +2686,39 @@ void WorldState::StartExpansionEvent()
     }
 }
 
+void WorldState::SetTbcRaceBoostRestriction(uint32 flags)
+{
+    uint32 oldFlags = m_restrictedTbcRacesBoosts;
+    m_restrictedTbcRacesBoosts = flags;
+    // tbc races
+    if ((oldFlags & BOOST_FLAG_TBC_RACES) == 0 && (flags & BOOST_FLAG_TBC_RACES))
+        sGameEventMgr.StartEvent(GAME_EVENT_LEVEL_BOOST_RESTRICTION_TBC_RACES);
+    else if ((oldFlags & BOOST_FLAG_TBC_RACES) && (flags & BOOST_FLAG_TBC_RACES) == 0)
+        sGameEventMgr.StopEvent(GAME_EVENT_LEVEL_BOOST_RESTRICTION_TBC_RACES);
+    // horde races
+    if ((oldFlags & BOOST_FLAG_HORDE_RACES) == 0 && (flags & BOOST_FLAG_HORDE_RACES))
+        sGameEventMgr.StartEvent(GAME_EVENT_LEVEL_BOOST_RESTRICTION_HORDE_RACES);
+    else if ((oldFlags & BOOST_FLAG_HORDE_RACES) && (flags & BOOST_FLAG_HORDE_RACES) == 0)
+        sGameEventMgr.StopEvent(GAME_EVENT_LEVEL_BOOST_RESTRICTION_HORDE_RACES);
+    // alliance races
+    if ((oldFlags & BOOST_FLAG_ALLIANCE_RACES) == 0 && (flags & BOOST_FLAG_ALLIANCE_RACES))
+        sGameEventMgr.StartEvent(GAME_EVENT_LEVEL_BOOST_RESTRICTION_ALLIANCE_RACES);
+    else if ((oldFlags & BOOST_FLAG_ALLIANCE_RACES) && (flags & BOOST_FLAG_ALLIANCE_RACES) == 0)
+        sGameEventMgr.StopEvent(GAME_EVENT_LEVEL_BOOST_RESTRICTION_ALLIANCE_RACES);
+    Save(SAVE_ID_BOOST_RESTRICTIONS);
+}
+
+void WorldState::StartRestrictionEvent()
+{
+    uint32 flags = m_restrictedTbcRacesBoosts;
+    if (flags & BOOST_FLAG_TBC_RACES)
+        sGameEventMgr.StartEvent(GAME_EVENT_LEVEL_BOOST_RESTRICTION_TBC_RACES);
+    if (flags & BOOST_FLAG_HORDE_RACES)
+        sGameEventMgr.StartEvent(GAME_EVENT_LEVEL_BOOST_RESTRICTION_HORDE_RACES);
+    if (flags & BOOST_FLAG_ALLIANCE_RACES)
+        sGameEventMgr.StartEvent(GAME_EVENT_LEVEL_BOOST_RESTRICTION_ALLIANCE_RACES);
+}
+
 void WorldState::FillInitialWorldStates(ByteBuffer& data, uint32& count, uint32 zoneId, uint32 /*areaId*/)
 {
     if (m_siData.m_state != STATE_0_DISABLED) // scourge invasion active - need to send all worldstates
@@ -2762,4 +2828,143 @@ void WorldState::FillInitialWorldStates(ByteBuffer& data, uint32& count, uint32 
             break;
         }
     }
+}
+
+const char* levelupMessages[SERVER_FIRST_MAX] =
+{
+    "Congratulations! Player %s is the first to level 65.",
+    "Congratulations! Player %s is the first to level 66.",
+    "Congratulations! Player %s is the first to level 67.",
+    "Congratulations! Player %s is the first to level 68.",
+    "Congratulations! Player %s is the first to level 69.",
+    "Congratulations! Player %s is the first to level 70.",
+
+    "Congratulations! Player %s is the first Human to level 70.",
+    "Congratulations! Player %s is the first Dwarf to level 70.",
+    "Congratulations! Player %s is the first Gnome to level 70.",
+    "Congratulations! Player %s is the first Night Elf to level 70.",
+    "Congratulations! Player %s is the first Draenei to level 70.",
+
+    "Congratulations! Player %s is the first Orc to level 70.",
+    "Congratulations! Player %s is the first Tauren to level 70.",
+    "Congratulations! Player %s is the first Undead to level 70.",
+    "Congratulations! Player %s is the first Troll to level 70.",
+    "Congratulations! Player %s is the first Blood Elf to level 70.",
+
+    "Congratulations! Player %s is the first Priest to level 70.",
+    "Congratulations! Player %s is the first Mage to level 70.",
+    "Congratulations! Player %s is the first Warlock to level 70.",
+    "Congratulations! Player %s is the first Rogue to level 70.",
+    "Congratulations! Player %s is the first Druid to level 70.",
+    "Congratulations! Player %s is the first Hunter to level 70.",
+    "Congratulations! Player %s is the first Shaman to level 70.",
+    "Congratulations! Player %s is the first Warrior to level 70.",
+    "Congratulations! Player %s is the first Paladin to level 70.",
+};
+
+const char* serverFirstType[SERVER_FIRST_MAX] =
+{
+    "65: ",
+    "66: ",
+    "67: ",
+    "68: ",
+    "69: ",
+    "70: ",
+
+    "70 Human: ",
+    "70 Dwarf: ",
+    "70 Gnome: ",
+    "70 Night Elf: ",
+    "70 Draenei: ",
+
+    "70 Orc: ",
+    "70 Tauren: ",
+    "70 Undead: ",
+    "70 Troll: ",
+    "70 Blood Elf: ",
+
+    "70 Priest: ",
+    "70 Mage: ",
+    "70 Warlock: ",
+    "70 Rogue: ",
+    "70 Druid: ",
+    "70 Hunter: ",
+    "70 Shaman: ",
+    "70 Warrior: ",
+    "70 Paladin: ",
+};
+
+void WorldState::PlayerLevelledUp(uint32 level, const std::string& name, uint8 race, uint8 plClass)
+{
+    if (level < 65)
+        return;
+
+    {
+        std::lock_guard<std::mutex> guard(m_mutex);
+        switch (level)
+        {
+            case 65: CheckPlayerLevelupAndBroadcast(SERVER_FIRST_LEVEL_65, level, name); break;
+            case 66: CheckPlayerLevelupAndBroadcast(SERVER_FIRST_LEVEL_66, level, name); break;
+            case 67: CheckPlayerLevelupAndBroadcast(SERVER_FIRST_LEVEL_67, level, name); break;
+            case 68: CheckPlayerLevelupAndBroadcast(SERVER_FIRST_LEVEL_68, level, name); break;
+            case 69: CheckPlayerLevelupAndBroadcast(SERVER_FIRST_LEVEL_69, level, name); break;
+            case 70:
+            {
+                CheckPlayerLevelupAndBroadcast(SERVER_FIRST_LEVEL_70, level, name);
+                switch (race)
+                {
+                    case RACE_HUMAN:    CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_RACE_HUMAN, level, name); break;
+                    case RACE_ORC:      CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_RACE_ORC, level, name); break;
+                    case RACE_DWARF:    CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_RACE_DWARF, level, name); break;
+                    case RACE_NIGHTELF: CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_RACE_NELF, level, name); break;
+                    case RACE_UNDEAD:   CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_RACE_UNDEAD, level, name); break;
+                    case RACE_TAUREN:   CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_RACE_TAUREN, level, name); break;
+                    case RACE_GNOME:    CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_RACE_GNOME, level, name); break;
+                    case RACE_TROLL:    CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_RACE_TROLL, level, name); break;
+                    case RACE_BLOODELF: CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_RACE_BELF, level, name); break;
+                    case RACE_DRAENEI:  CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_RACE_DRAENEI, level, name); break;
+                }
+                switch (plClass)
+                {
+                    case CLASS_WARRIOR: CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_WARRIOR, level, name); break;
+                    case CLASS_PALADIN: CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_PALADIN, level, name); break;
+                    case CLASS_HUNTER:  CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_HUNTER, level, name); break;
+                    case CLASS_ROGUE:   CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_ROGUE, level, name); break;
+                    case CLASS_PRIEST:  CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_PRIEST, level, name); break;
+                    case CLASS_SHAMAN:  CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_SHAMAN, level, name); break;
+                    case CLASS_MAGE:    CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_MAGE, level, name); break;
+                    case CLASS_WARLOCK: CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_WARLOCK, level, name); break;
+                    case CLASS_DRUID:   CheckPlayerLevelupAndBroadcast(SERVER_FIRST_70_DRUID, level, name); break;
+                }
+                break;
+            }
+        }
+    }
+}
+
+void WorldState::CheckPlayerLevelupAndBroadcast(ServerFirst id, uint32 level, const std::string& name)
+{
+    if (m_serverFirsts[id].empty())
+    {
+        m_serverFirsts[id] = name;
+        Save(SaveIds(SAVE_ID_SERVER_FIRST_FIRST + id));
+        sWorld.GetMessager().AddMessage([playerName = name, message = levelupMessages[id]](World* world)
+        {
+            char buffer[100];
+            snprintf(buffer, 100, message, playerName.data());
+            WorldPacket data(SMSG_NOTIFICATION, (strlen(buffer) + 1));
+            data << buffer;
+            world->SendGlobalMessage(data);
+            world->SendServerMessage(SERVER_MSG_CUSTOM, buffer);
+        });
+    }
+}
+
+std::string WorldState::GetServerFirstString() const
+{
+    std::string output = "Server firsts:\n";
+    for (uint32 i = 0; i < SERVER_FIRST_MAX; ++i)
+        if (!m_serverFirsts[i].empty())
+            output += serverFirstType[i] + m_serverFirsts[i] + "\n";
+    return output;
 }

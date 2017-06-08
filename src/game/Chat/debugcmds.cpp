@@ -1914,3 +1914,112 @@ bool ChatHandler::HandleDebugDbscriptGuided(char* args)
     player->GetMap()->ScriptsStart(ScriptMapType(scriptType), chosenId, source, target);
     return true;
 }
+
+bool ChatHandler::HandleGetItemsAndEnchantIdsCommand(char* args)
+{
+    Player* player = m_session->GetPlayer();
+    if (!player)
+        return false;
+
+    std::stringstream ss;
+
+    // Get all item IDs
+    for (int i_slot = EQUIPMENT_SLOT_START; i_slot < EQUIPMENT_SLOT_END; i_slot++)
+    {
+        Item* itemTarget = player->GetItemByPos(INVENTORY_SLOT_BAG_0, i_slot);
+        if (!itemTarget)
+            continue;
+
+        ss << itemTarget->GetProto()->ItemId << ", ";
+    }
+
+    std::string outputStr = ss.str();
+    SendSysMessage("Item Entry IDs:");
+    SendSysMessage(outputStr.substr(0, outputStr.size() - 2).c_str()); // strip trailing ", "
+
+    // reset
+    ss.str("");
+    ss.clear();
+
+    // Get enchant IDs on items
+    for (int i_slot = EQUIPMENT_SLOT_START; i_slot < EQUIPMENT_SLOT_END; i_slot++)
+    {
+        Item* itemTarget = player->GetItemByPos(INVENTORY_SLOT_BAG_0, i_slot);
+        if (!itemTarget)
+        {
+            ss << "0, ";
+            continue;
+        }
+
+        ss << itemTarget->GetEnchantmentId(PERM_ENCHANTMENT_SLOT) << ", ";
+    }
+
+    outputStr = ss.str();
+    SendSysMessage("Enchant IDs:");
+    SendSysMessage(outputStr.substr(0, outputStr.size() - 2).c_str()); // strip trailing ", "
+
+    return true;
+}
+
+bool ChatHandler::HandleGetGemEnchantmentIdCommand(char* args)
+{
+    if (!*args)
+        return false;
+
+    uint32 itemId = 0;
+
+    if (args[0] == '[')                                        // [name] manual form
+    {
+        char* citemName = strtok((char*)args, "]");
+
+        if (citemName && citemName[0])
+        {
+            std::string itemName = citemName + 1;
+            WorldDatabase.escape_string(itemName);
+            auto result = WorldDatabase.PQuery("SELECT entry FROM item_template WHERE name = '%s'", itemName.c_str());
+            if (!result)
+            {
+                PSendSysMessage(LANG_COMMAND_COULDNOTFIND, citemName + 1);
+                SetSentErrorMessage(true);
+                return false;
+            }
+            itemId = result->Fetch()->GetUInt16();
+        }
+        else
+            return false;
+    }
+    else                                                    // item_id or [name] Shift-click form |color|Hitem:item_id:0:0:0|h[name]|h|r
+    {
+        char* cId = ExtractKeyFromLink(&args, "Hitem");
+        if (!cId)
+            return false;
+        itemId = atol(cId);
+    }
+
+    ItemPrototype const* pProto = sObjectMgr.GetItemPrototype(itemId);
+    if (!pProto)
+    {
+        PSendSysMessage(LANG_COMMAND_ITEMIDINVALID, itemId);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    if (pProto->Class != 3)
+    {
+        SendSysMessage("Not a gem!");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    GemPropertiesEntry const* gemProp = sGemPropertiesStore.LookupEntry(pProto->GemProperties);
+    if (!gemProp)
+    {
+        SendSysMessage("No gem property");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    PSendSysMessage("%s gem enchantment ID is: %u", pProto->Name1, gemProp->spellitemenchantement);
+
+    return true;
+}

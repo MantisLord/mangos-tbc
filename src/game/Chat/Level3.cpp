@@ -61,6 +61,7 @@
 #include "Metric/Metric.h"
 #endif
 #include "Server/PacketLog.h"
+#include "AutoBroadcast/AutoBroadcastMgr.h"
 
 #include "Globals/UnitCondition.h"
 #include "Globals/CombatCondition.h"
@@ -278,6 +279,7 @@ bool ChatHandler::HandleReloadAllSpellCommand(char* /*args*/)
     HandleReloadSpellElixirCommand((char*)"a");
     HandleReloadSpellLearnSpellCommand((char*)"a");
     HandleReloadSpellProcEventCommand((char*)"a");
+    HandleReloadSpellDisabledCommand((char*)"a");
     HandleReloadSpellProcItemEnchantCommand((char*)"a");
     HandleReloadSpellScriptTargetCommand((char*)"a");
     HandleReloadSpellTargetPositionCommand((char*)"a");
@@ -343,6 +345,21 @@ bool ChatHandler::HandleReloadAreaTriggerTeleportCommand(char* /*args*/)
     sLog.outString("Re-Loading AreaTrigger teleport definitions...");
     sObjectMgr.LoadAreaTriggerTeleports();
     SendGlobalSysMessage("DB table `areatrigger_teleport` reloaded.");
+    return true;
+}
+
+bool ChatHandler::HandleReloadAutoBroadcastCommand(char* /*args*/)
+{
+    sAutoBroadCastMgr.load();
+    SendGlobalSysMessage("DB table `autobroadcast` reloaded.");
+    return true;
+}
+
+bool ChatHandler::HandleReloadChatFilteredCommand(char* /*args*/)
+{
+    sLog.outString("Re-Loading filtered chat messages...");
+    sWorld.LoadChatFilteredMessages();
+    //SendGlobalSysMessage("DB table chat_filtered reloaded.");
     return true;
 }
 
@@ -684,6 +701,14 @@ bool ChatHandler::HandleReloadSpellChainCommand(char* /*args*/)
     sLog.outString("Re-Loading Spell Chain Data... ");
     sSpellMgr.LoadSpellChains();
     SendGlobalSysMessage("DB table `spell_chain` (spell ranks) reloaded.");
+    return true;
+}
+
+bool ChatHandler::HandleReloadSpellDisabledCommand(char* /*arg*/)
+{
+    sLog.outString("Re-Loading spell disabled table...");
+    sObjectMgr.LoadSpellDisabledEntrys();
+    SendGlobalSysMessage("DB table `spell_disabled` reloaded.");
     return true;
 }
 
@@ -1503,47 +1528,16 @@ bool ChatHandler::HandleLearnAllMyClassCommand(char* /*args*/)
     return true;
 }
 
-bool ChatHandler::HandleLearnAllMySpellsCommand(char* /*args*/)
+bool ChatHandler::HandleLearnAllMySpellsCommand(char* args)
 {
     Player* player = m_session->GetPlayer();
-    ChrClassesEntry const* clsEntry = sChrClassesStore.LookupEntry(player->getClass());
-    if (!clsEntry)
-        return true;
-    uint32 family = clsEntry->spellfamily;
 
-    for (uint32 i = 0; i < sSkillLineAbilityStore.GetNumRows(); ++i)
-    {
-        SkillLineAbilityEntry const* entry = sSkillLineAbilityStore.LookupEntry(i);
-        if (!entry)
-            continue;
-
-        SpellEntry const* spellInfo = sSpellTemplate.LookupEntry<SpellEntry>(entry->spellId);
-        if (!spellInfo)
-            continue;
-
-        // skip server-side/triggered spells
-        if (spellInfo->spellLevel == 0)
-            continue;
-
-        // skip wrong class/race skills
-        if (!player->IsSpellFitByClassAndRace(spellInfo->Id))
-            continue;
-
-        // skip other spell families
-        if (spellInfo->SpellFamilyName != family)
-            continue;
-
-        // skip spells with first rank learned as talent (and all talents then also)
-        uint32 first_rank = sSpellMgr.GetFirstSpellInChain(spellInfo->Id);
-        if (GetTalentSpellCost(first_rank) > 0)
-            continue;
-
-        // skip broken spells
-        if (!SpellMgr::IsSpellValid(spellInfo, player, false))
-            continue;
-
-        player->learnSpell(spellInfo->Id, false);
-    }
+    uint32 param;
+    ExtractOptUInt32(&args, param, 0);
+    if (param != 0)
+        player->learnClassLevelSpells(true);
+    else
+        player->learnClassLevelSpells(false);
 
     SendSysMessage(LANG_COMMAND_LEARN_CLASS_SPELLS);
     return true;
@@ -7369,6 +7363,34 @@ bool ChatHandler::HandleSetVariable(char* args)
     return true;
 }
 
+bool ChatHandler::HandleTbcRacesBoostRestriction(char* args)
+{
+    uint32 restrictionStateFlags = sWorldState.IsTbcRaceBoostRestricted();
+
+    uint32 param;
+    if (!ExtractUInt32(&args, param))
+    {
+        PSendSysMessage("Current restriction state: %u", restrictionStateFlags);
+        return true;
+    }
+
+    if (param > BOOST_FLAG_MAX)
+    {
+        SendSysMessage("Restriction value must be between 0 (false) and 1 (true).");
+        return true;
+    }
+
+    if (param == restrictionStateFlags)
+    {
+        SendSysMessage("Current restriction state is same as given restriction state.");
+        return true;
+    }
+
+    sWorldState.SetTbcRaceBoostRestriction(param);
+    PSendSysMessage("New restriction state set to %u", param);
+    return true;
+}
+
 enum ModSpells
 {
     // client spells
@@ -7472,6 +7494,26 @@ bool ChatHandler::ModifyStatCommandHelper(char* args, char const* statName, uint
         target->SetPower(POWER_MANA, target->GetMaxPower(POWER_MANA));
 
     PSendSysMessage("You changed %s of %s to %i.", statName, target->GetName(), amount);
+
+    return true;
+}
+
+bool ChatHandler::HandleFaceMeCommand(char* /*args*/)
+{
+    Unit* target = getSelectedUnit();
+    if (!target || !m_session->GetPlayer()->GetSelectionGuid())
+    {
+        SendSysMessage(LANG_SELECT_CHAR_OR_CREATURE);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    if (target->GetTypeId() == TYPEID_PLAYER)
+    {
+        target->InterruptNonMeleeSpells(true);
+        target->SetFacingToObject(m_session->GetPlayer());
+        PSendSysMessage("%s is facing you.", GetNameLink((Player*)target).c_str());
+    }
 
     return true;
 }
@@ -7662,3 +7704,116 @@ bool ChatHandler::HandleGoNextCommand(char* args)
 
     return HandleGoHelper(player, mapId, x, y, &z);
 }
+
+bool ChatHandler::HandleDeserterCommand(char* args)
+{
+    Player* player = m_session->GetPlayer();
+    Unit* target = getSelectedUnit();
+
+    if (!target || !player->GetSelectionGuid() || target->GetTypeId() != TYPEID_PLAYER)
+    {
+        SendSysMessage(LANG_SELECT_CHAR_OR_CREATURE);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    uint32 param;
+    ExtractOptUInt32(&args, param, 0);
+    switch (param)
+    {
+        case 0:
+        default:
+            target->CastSpell(target, 26013, TRIGGERED_OLD_TRIGGERED);
+            PSendSysMessage("%s has been given the Deserter debuff for 15 minutes.", GetNameLink((Player*)target).c_str());
+            break;
+        case 1:
+            target->CastSpell(target, 90000, TRIGGERED_OLD_TRIGGERED);
+            PSendSysMessage("%s has been given the Deserter debuff for 30 minutes.", GetNameLink((Player*)target).c_str());
+            break;
+        case 2:
+            target->CastSpell(target, 90001, TRIGGERED_OLD_TRIGGERED);
+            PSendSysMessage("%s has been given the Deserter debuff for 1 hour.", GetNameLink((Player*)target).c_str());
+            break;
+        case 3:
+            target->CastSpell(target, 90002, TRIGGERED_OLD_TRIGGERED);
+            PSendSysMessage("%s has been given the Deserter debuff for 2 hours.", GetNameLink((Player*)target).c_str());
+            break;
+        case 4:
+            target->CastSpell(target, 90003, TRIGGERED_OLD_TRIGGERED);
+            PSendSysMessage("%s has been given the Deserter debuff for 18 hours.", GetNameLink((Player*)target).c_str());
+            break;
+        case 5:
+            target->CastSpell(target, 90004, TRIGGERED_OLD_TRIGGERED);
+            PSendSysMessage("%s has been given the Deserter debuff for 1 week.", GetNameLink((Player*)target).c_str());
+            break;
+    }
+
+    return true;
+}
+
+bool ChatHandler::HandleUnDeserterCommand(char* args)
+{
+    Player* player = m_session->GetPlayer();
+    Unit* target = getSelectedUnit();
+
+    if (!target || !player->GetSelectionGuid() || target->GetTypeId() != TYPEID_PLAYER)
+    {
+        SendSysMessage(LANG_SELECT_CHAR_OR_CREATURE);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    uint32 param;
+    ExtractOptUInt32(&args, param, 0);
+    switch (param)
+    {
+        case 0:
+        default:
+            target->RemoveAurasDueToSpell(90000);
+            target->RemoveAurasDueToSpell(90001);
+            target->RemoveAurasDueToSpell(90002);
+            target->RemoveAurasDueToSpell(90003);
+            target->RemoveAurasDueToSpell(90004);
+            target->RemoveAurasDueToSpell(26013);
+            PSendSysMessage("All Deserter debuffs removed from %s.", GetNameLink((Player*)target).c_str());
+            break;
+        case 1:
+            if (target->HasAura(90000))
+            {
+                target->RemoveAurasDueToSpell(90000);
+                PSendSysMessage("30 minute Deserter debuff has been removed from %s.", GetNameLink((Player*)target).c_str());
+            }
+            break;
+        case 2:
+            if (target->HasAura(90001))
+            {
+                target->RemoveAurasDueToSpell(90001);
+                PSendSysMessage("1 hour Deserter debuff has been removed from %s.", GetNameLink((Player*)target).c_str());
+            }
+            break;
+        case 3:
+            if (target->HasAura(90002))
+            {
+                target->RemoveAurasDueToSpell(90002);
+                PSendSysMessage("2 hour Deserter debuff has been removed from %s.", GetNameLink((Player*)target).c_str());
+            }
+            break;
+        case 4:
+            if (target->HasAura(90003))
+            {
+                target->RemoveAurasDueToSpell(90003);
+                PSendSysMessage("18 hour Deserter debuff has been removed from %s.", GetNameLink((Player*)target).c_str());
+            }
+            break;
+        case 5:
+            if (target->HasAura(90004))
+            {
+                target->RemoveAurasDueToSpell(90004);
+                PSendSysMessage("1 week Deserter debuff has been removed from %s.", GetNameLink((Player*)target).c_str());
+            }
+            break;
+    }
+
+    return true;
+}
+

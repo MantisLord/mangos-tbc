@@ -112,6 +112,10 @@ class Log : public MaNGOS::Singleton<Log, MaNGOS::ClassLevelLockable<Log, std::m
                 fclose(charLogfile);
             charLogfile = nullptr;
 
+            if (arenaLogFile != nullptr)
+                fclose(arenaLogFile);
+            arenaLogFile = nullptr;
+
             if (dberLogfile != nullptr)
                 fclose(dberLogfile);
             dberLogfile = nullptr;
@@ -135,6 +139,10 @@ class Log : public MaNGOS::Singleton<Log, MaNGOS::ClassLevelLockable<Log, std::m
             if (customLogFile != nullptr)
                 fclose(customLogFile);
             customLogFile = nullptr;
+
+            if (announceLogFile != nullptr)
+                fclose(announceLogFile);
+            announceLogFile = nullptr;
         }
     public:
         void Initialize();
@@ -159,6 +167,8 @@ class Log : public MaNGOS::Singleton<Log, MaNGOS::ClassLevelLockable<Log, std::m
         // any log level
         void outChar(const char* str, ...)        ATTR_PRINTF(2, 3);
 
+        void outArena(const char* str, ...)       ATTR_PRINTF(2, 3);
+
         void outErrorEventAI();                             // any log level
         // any log level
         void outErrorEventAI(const char* err, ...)      ATTR_PRINTF(2, 3);
@@ -172,6 +182,7 @@ class Log : public MaNGOS::Singleton<Log, MaNGOS::ClassLevelLockable<Log, std::m
         void outCharDump(const char* str, uint32 account_id, uint32 guid, const char* name);
         void outRALog(const char* str, ...)       ATTR_PRINTF(2, 3);
         void outCustomLog(const char* str, ...)       ATTR_PRINTF(2, 3);
+        void outAnnounceLog(const char* str, ...)       ATTR_PRINTF(2, 3);
         uint32 GetLogLevel() const { return m_logLevel; }
         void SetLogLevel(char* level);
         void SetLogFileLevel(char* level);
@@ -202,12 +213,13 @@ class Log : public MaNGOS::Singleton<Log, MaNGOS::ClassLevelLockable<Log, std::m
         FILE* logfile;
         FILE* gmLogfile;
         FILE* charLogfile;
+        FILE* arenaLogFile;
         FILE* dberLogfile;
         FILE* eventAiErLogfile;
         FILE* scriptErrLogFile;
         FILE* worldLogfile;
         FILE* customLogFile;
-
+        FILE* announceLogFile;
         std::mutex m_worldLogMtx;
         std::mutex m_traceLogMtx;
 

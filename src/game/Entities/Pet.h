@@ -213,7 +213,7 @@ class Pet : public Creature
         void KillLoyaltyBonus(uint32 level);
         uint32 GetLoyaltyLevel() { return GetByteValue(UNIT_FIELD_BYTES_1, UNIT_BYTES_1_OFFSET_PET_LOYALTY); }
         void SetLoyaltyLevel(LoyaltyLevel level);
-        void GivePetXP(uint32 xp);
+        void GivePetXP(uint32 xp, Player* owner);
         void GivePetLevel(uint32 level);
         void SynchronizeLevelWithOwner();
         void InitStatsForLevel(uint32 petlevel);

@@ -553,6 +553,9 @@ bool ChatHandler::HandleGonameCommand(char* args)
                 SetSentErrorMessage(true);
                 return false;
             }
+            // Teleporting into BG, add as a spectator.
+            if (BattleGround* bg = target->GetBattleGround())
+                    _player->SetSpectator(true, bg);
             // all's well, set bg id
             // when porting out from the bg, it will be reset to 0
             _player->SetBattleGroundId(target->GetBattleGroundId(), target->GetBattleGroundTypeId());

@@ -21,6 +21,7 @@
 #include "Server/WorldSession.h"
 #include "Log/Log.h"
 #include "Entities/Player.h"
+#include "World/World.h"
 
 void WorldSession::HandleDuelAcceptedOpcode(WorldPacket& recvPacket)
 {
@@ -58,8 +59,19 @@ void WorldSession::HandleDuelAcceptedOpcode(WorldPacket& recvPacket)
     self->duel->startTimer = now;
     opponent->duel->startTimer = now;
 
+    // Custom: reset powers for both players at duel accept.
+    if (sWorld.getConfig(CONFIG_BOOL_RESET_HP_MANA_COOLDOWNS_AFTER_DUEL))
+    {
+        self->DuelResetPowers();
+        self->duel->opponent->DuelResetPowers();
+    }
+
     self->SendDuelCountdown(3000);
     opponent->SendDuelCountdown(3000);
+
+    // Duel phasing
+    self->EnterDuelPhase();
+    opponent->EnterDuelPhase();
 }
 
 void WorldSession::HandleDuelCancelledOpcode(WorldPacket& recvPacket)
