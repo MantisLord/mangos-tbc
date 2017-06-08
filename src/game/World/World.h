@@ -86,7 +86,9 @@ enum WorldTimers
     WUPDATE_GROUPS      = 6,
     WUPDATE_WARDEN      = 7, // This is here for headache merge error issues
     WUPDATE_METRICS     = 8, // not used if BUILD_METRICS is not set
-    WUPDATE_COUNT       = 9
+    WUPDATE_AUTOBROADCAST = 9,
+    WUPDATE_EXT_MAIL    = 10,
+    WUPDATE_COUNT       = 11
 };
 
 /// Configuration elements
@@ -141,6 +143,7 @@ enum eConfigUInt32Values
     CONFIG_UINT32_GM_INVISIBLE_AURA,
     CONFIG_UINT32_MAIL_DELIVERY_DELAY,
     CONFIG_UINT32_MASS_MAILER_SEND_PER_TICK,
+    CONFIG_UINT32_EXTERNAL_MAIL_INTERVAL,
     CONFIG_UINT32_UPTIME_UPDATE,
     CONFIG_UINT32_NUM_MAP_THREADS,
     CONFIG_UINT32_AUCTION_DEPOSIT_MIN,
@@ -196,6 +199,10 @@ enum eConfigUInt32Values
     CONFIG_UINT32_CHARDELETE_KEEP_DAYS,
     CONFIG_UINT32_CHARDELETE_METHOD,
     CONFIG_UINT32_CHARDELETE_MIN_LEVEL,
+    CONFIG_UINT32_AUTOBROADCAST_TIMER,
+    CONFIG_UINT32_AUTOBROADCAST_CENTER,
+    CONFIG_UINT32_BOOST_LEVEL,
+    CONFIG_UINT32_BOOST_MIN_LEVEL_RESTRICTED,
     CONFIG_UINT32_GUID_RESERVE_SIZE_CREATURE,
     CONFIG_UINT32_GUID_RESERVE_SIZE_GAMEOBJECT,
     CONFIG_UINT32_CREATURE_RESPAWN_AGGRO_DELAY,
@@ -210,6 +217,7 @@ enum eConfigUInt32Values
     CONFIG_UINT32_MAX_RECRUIT_A_FRIEND_BONUS_PLAYER_LEVEL,
     CONFIG_UINT32_MAX_RECRUIT_A_FRIEND_BONUS_PLAYER_LEVEL_DIFFERENCE,
     CONFIG_UINT32_SUNSREACH_COUNTER,
+    CONFIG_UINT32_MAX_RESPEC_COST,
     CONFIG_UINT32_VALUE_COUNT
 };
 
@@ -375,6 +383,7 @@ enum eConfigBoolValues
     CONFIG_BOOL_OUTDOORPVP_ZM_ENABLED,
     CONFIG_BOOL_OUTDOORPVP_TF_ENABLED,
     CONFIG_BOOL_OUTDOORPVP_NA_ENABLED,
+    CONFIG_BOOL_AUTOBROADCAST_ENABLED,
     CONFIG_BOOL_KICK_PLAYER_ON_BAD_PACKET,
     CONFIG_BOOL_STATS_SAVE_ONLY_ON_LOGOUT,
     CONFIG_BOOL_CLEAN_CHARACTER_DB,
@@ -392,6 +401,25 @@ enum eConfigBoolValues
     CONFIG_BOOL_PRELOAD_MMAP_TILES,
     CONFIG_BOOL_LFG_ENABLED,
     CONFIG_BOOL_REGEN_ZONE_AREA_ON_STARTUP,
+    CONFIG_BOOL_AUTOLEARN_MAX_TALENT_RANK,
+    CONFIG_BOOL_START_ALL_SPELLS,
+    CONFIG_BOOL_START_ALL_EXPLORED,
+    CONFIG_BOOL_DISABLE_DURABILITY_LOSS,
+    CONFIG_BOOL_START_NO_ITEMS,
+    CONFIG_BOOL_RESET_HP_MANA_COOLDOWNS_AFTER_DUEL,
+    CONFIG_BOOL_PETS_ALWAYS_HAPPY_LOYAL,
+    CONFIG_BOOL_START_MAX_FIRST_AID,
+    CONFIG_BOOL_START_HUNTER_AMMO_REPUTATIONS,
+    CONFIG_BOOL_START_ALL_BANK_BAG_SLOTS,
+    CONFIG_BOOL_ENABLE_MALL_GRAVEYARD,
+    CONFIG_BOOL_RESET_POWERS_COOLDOWNS_ON_BG_JOIN,
+    CONFIG_BOOL_INSTANT_CAST_DURING_BG_ARENA_PREP,
+    CONFIG_BOOL_MAX_WEAPON_SKILLS_ON_TRAINING,
+    CONFIG_BOOL_ROGUE_POISON_DURATION_EXTEND,
+    CONFIG_BOOL_AREA_RESTRICTION,
+    CONFIG_BOOL_ZONE_RESTRICTION,
+    CONFIG_BOOL_START_ALL_PET_STABLE_SLOTS,
+    CONFIG_BOOL_EXTERNAL_MAIL,
     CONFIG_BOOL_VALUE_COUNT
 };
 
@@ -420,6 +448,8 @@ enum RealmType
     REALM_TYPE_FFA_PVP  = 16                                // custom, free for all pvp mode like arena PvP in all zones except rest activated places and sanctuaries
                           // replaced by REALM_PVP in realm list
 };
+
+#define MAX_PLAYER_LEVEL 255
 
 /// Storage class for commands issued for delayed execution
 struct CliCommandHolder
@@ -526,6 +556,7 @@ class World
         void SendZoneUnderAttackMessage(uint32 zoneId, Team team);
         void SendDefenseMessage(uint32 zoneId, int32 textId);
         void SendDefenseMessageBroadcastText(uint32 zoneId, uint32 textId);
+        void SendWorldTextPvpMessage(int32 string_id, ...);
 
         /// Are we in the middle of a shutdown?
         bool IsShutdowning() const { return m_ShutdownTimer > 0; }
@@ -643,6 +674,17 @@ class World
         BattleGroundQueue& GetBGQueue() { return m_bgQueue; }
         void StartLFGQueueThread();
         void StartBGQueueThread();
+
+        // Custom
+        uint32 GetExperienceCapForLevel(uint32 level, Team team);
+        void GetExperienceCapArray(Team team, std::array<uint32, MAX_PLAYER_LEVEL>& capArray);
+
+        bool IsAreaEnabled(uint32 areaId);
+        bool IsZoneEnabled(uint32 zoneId);
+
+        void LoadChatFilteredMessages();
+        bool ChatMessageIsFiltered(std::string& msg);
+
     protected:
         void _UpdateGameTime();
         // callback for UpdateRealmCharacters
@@ -662,6 +704,10 @@ class World
         void GeneratePacketMetrics(); // thread safe due to atomics
         uint32 GetAverageLatency() const;
 #endif
+
+        void LoadExperienceBrackets();
+
+        void LoadAutoBroadcasts();
 
     private:
         void setConfig(eConfigUInt32Values index, char const* fieldname, uint32 defvalue);
@@ -776,6 +822,17 @@ class World
         std::thread m_lfgQueueThread;
         BattleGroundQueue m_bgQueue;
         std::thread m_bgQueueThread;
+
+        // Custom
+        // Map of counts of given group
+        std::array<std::array<uint32, MAX_PLAYER_LEVEL>, 2> m_experienceBrackets;
+
+        void parseAllowedAreaIds(const char* allowedAreaIds);
+        std::set<uint32>* m_areaEnabledIds = nullptr;
+        void parseAllowedZoneIds(const char* allowedZoneIds);
+        std::set<uint32>* m_zoneEnabledIds = nullptr;
+
+        std::vector<std::string> m_filteredMessages;
 };
 
 extern uint32 realmID;

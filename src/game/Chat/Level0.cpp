@@ -29,6 +29,7 @@
 #include "SystemConfig.h"
 #include "revision.h"
 #include "Util/Util.h"
+#include "World/WorldState.h"
 
 bool ChatHandler::HandleHelpCommand(char* args)
 {
@@ -150,6 +151,22 @@ bool ChatHandler::HandleSaveCommand(char* /*args*/)
     if (save_interval == 0 || (save_interval > 20 * IN_MILLISECONDS && player->GetSaveTimer() <= save_interval - 20 * IN_MILLISECONDS))
         player->SaveToDB();
 
+    return true;
+}
+
+bool ChatHandler::HandleTogglePvpMessages(char* args)
+{
+    Player* player = m_session->GetPlayer();
+    if (player->IsIgnoringPvpMessages())
+    {
+        player->SetIgnoringPvpMessages(false);
+        SendSysMessage("You no longer ignore PvP messages");
+    }
+    else
+    {
+        player->SetIgnoringPvpMessages(true);
+        SendSysMessage("You now ignore PvP messages");
+    }
     return true;
 }
 
@@ -303,5 +320,115 @@ bool ChatHandler::HandleWhisperRestrictionCommand(char* args)
     m_session->GetPlayer()->SetWhisperRestriction(value);
     PSendSysMessage("Whisper restriction is now %s.", value ? "ON. Only friends, group members, or guildmates may whisper you." : "OFF");
 
+    return true;
+}
+
+// Custom
+bool ChatHandler::HandleXPCommandSet(char* args)
+{
+    Player* player = m_session->GetPlayer();
+
+    uint32 modifier;
+    if (!ExtractOptUInt32(&args, modifier, 10))
+    {
+        PSendSysMessage("XP modifier not a valid number.");
+        return false;
+    }
+
+    uint32 boostMinLevelRestricted = sWorld.getConfig(CONFIG_UINT32_BOOST_MIN_LEVEL_RESTRICTED);
+    uint32 cap = sWorld.GetExperienceCapForLevel(player->GetLevel(), player->GetTeam());
+    if (uint32 restrictionStateFlags = sWorldState.IsTbcRaceBoostRestricted())
+    {
+        if (restrictionStateFlags & BOOST_FLAG_TBC_RACES)
+        {
+            if (player->getRace() == RACE_DRAENEI || player->getRace() == RACE_BLOODELF)
+                if (player->GetLevel() < boostMinLevelRestricted)
+                    cap = 1;
+        }
+        if (restrictionStateFlags & BOOST_FLAG_HORDE_RACES)
+        {
+            if (player->getRace() == RACE_ORC || player->getRace() == RACE_UNDEAD || player->getRace() == RACE_TAUREN || player->getRace() == RACE_TROLL)
+                if (player->GetLevel() < boostMinLevelRestricted)
+                    cap = 1;
+        }
+        if (restrictionStateFlags & BOOST_FLAG_ALLIANCE_RACES)
+        {
+            if (player->getRace() == RACE_HUMAN || player->getRace() == RACE_DWARF || player->getRace() == RACE_NIGHTELF || player->getRace() == RACE_GNOME)
+                if (player->GetLevel() < boostMinLevelRestricted)
+                    cap = 1;
+        }
+    }
+    if (modifier && modifier <= cap)
+    {
+        player->SetPlayerXPModifier(modifier);
+        PSendSysMessage("You have set XP modifier to %u.", modifier);
+    }
+    else
+    {
+        PSendSysMessage("XP modifier not valid. Permitted values: 1 - %u.", cap);
+        return false;
+    }
+
+    return true;
+}
+
+bool ChatHandler::HandleXPCommandCurrent(char* /*args*/)
+{
+    Player* player = m_session->GetPlayer();
+
+    PSendSysMessage("Current XP modifier: %u.", player->GetPlayerXPModifier());
+
+    return true;
+}
+
+bool ChatHandler::HandleXPCommandAvailable(char* args)
+{
+    Player* player = m_session->GetPlayer();
+
+    PSendSysMessage("Current available XP modifiers:");
+    std::array<uint32, MAX_PLAYER_LEVEL> caps;
+    sWorld.GetExperienceCapArray(player->GetTeam(), caps);
+    uint32 boostMinLevelRestricted = sWorld.getConfig(CONFIG_UINT32_BOOST_MIN_LEVEL_RESTRICTED);
+    if (uint32 restrictionStateFlags = sWorldState.IsTbcRaceBoostRestricted())
+    {
+        if (restrictionStateFlags & BOOST_FLAG_TBC_RACES)
+        {
+            if (player->getRace() == RACE_DRAENEI || player->getRace() == RACE_BLOODELF)
+            {
+                for (uint32 i = 1; i < boostMinLevelRestricted; ++i)
+                    caps[i] = 1;
+            }
+        }
+        if (restrictionStateFlags & BOOST_FLAG_HORDE_RACES)
+        {
+            if (player->getRace() == RACE_ORC || player->getRace() == RACE_UNDEAD || player->getRace() == RACE_TAUREN || player->getRace() == RACE_TROLL)
+            {
+                for (uint32 i = 1; i < boostMinLevelRestricted; ++i)
+                    caps[i] = 1;
+            }
+        }
+        if (restrictionStateFlags & BOOST_FLAG_ALLIANCE_RACES)
+        {
+            if (player->getRace() == RACE_HUMAN || player->getRace() == RACE_DWARF || player->getRace() == RACE_NIGHTELF || player->getRace() == RACE_GNOME)
+            {
+                for (uint32 i = 1; i < boostMinLevelRestricted; ++i)
+                    caps[i] = 1;
+            }
+        }
+    }
+
+    for (uint32 i = 1; i < MAX_LEVEL_TBC; i += 10)
+    {
+        PSendSysMessage("%u: %u, %u: %u, %u: %u, %u: %u, %u: %u, %u: %u, %u: %u, %u: %u, %u: %u, %u: %u",
+            i, caps[i], i + 1, caps[i + 1], i + 2, caps[i + 2], i + 3, caps[i + 3], i + 4, caps[i + 4], i + 5, caps[i + 5], i + 6, caps[i + 6], i + 7, caps[i + 7], i + 8, caps[i + 8], i + 9, caps[i + 9]);
+    }
+
+    return true;
+}
+
+bool ChatHandler::HandleServerFirstPrint(char* args)
+{
+    std::string output = sWorldState.GetServerFirstString();
+    PSendSysMessage("%s", output.data());
     return true;
 }

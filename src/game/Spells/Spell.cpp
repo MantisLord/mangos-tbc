@@ -3118,6 +3118,34 @@ SpellCastResult Spell::SpellStart(SpellCastTargets const* targets, Aura* trigger
         }
     }
 
+    // Custom - Disabled spells system
+    if (m_trueCaster->IsPlayer())
+    {
+        if (sObjectMgr.IsPlayerSpellDisabled(m_spellInfo->Id))
+        {
+            SendCastResult(SPELL_FAILED_SPELL_UNAVAILABLE);
+            finish(false);
+            return SPELL_FAILED_SPELL_UNAVAILABLE;
+        }
+    }
+    else if (m_trueCaster->IsCreature() && static_cast<Creature*>(m_trueCaster)->IsPet())
+    {
+        if (sObjectMgr.IsPetSpellDisabled(m_spellInfo->Id))
+        {
+            SendCastResult(SPELL_FAILED_SPELL_UNAVAILABLE);
+            finish(false);
+            return SPELL_FAILED_SPELL_UNAVAILABLE;
+        }
+    }
+    else
+    {
+        if (sObjectMgr.IsCreatureSpellDisabled(m_spellInfo->Id))
+        {
+            finish(false);
+            return SPELL_FAILED_SPELL_UNAVAILABLE;
+        }
+    }
+
     SpellCastResult result = PreCastCheck();
     if (result != SPELL_CAST_OK)
     {
@@ -3142,6 +3170,17 @@ void Spell::Prepare()
     {
         SpellModRAII spellModController(this, m_trueCaster->GetSpellModOwner(), false, true);
         m_casttime = GetSpellCastTime(m_spellInfo, m_trueCaster, this, true);
+    }
+
+    // Custom - instant casts in bg/arena preparation
+    if (m_trueCaster->IsPlayer() && sWorld.getConfig(CONFIG_BOOL_INSTANT_CAST_DURING_BG_ARENA_PREP))
+    {
+        Player* plCaster = (Player*)m_caster;
+
+        BattleGround* bg = plCaster->GetBattleGround();
+        if (bg && bg->GetStatus() == STATUS_WAIT_JOIN)
+            if (!IsChanneledSpell(m_spellInfo))
+                m_casttime = 0;
     }
 
     // set timer base at cast time

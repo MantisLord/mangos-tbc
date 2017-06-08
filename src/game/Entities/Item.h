@@ -286,6 +286,9 @@ class Item : public Object
         void DeleteFromInventoryDB() const;
         void LoadLootFromDB(Field* fields);
 
+        Bag* ToBag() { if (IsBag()) return reinterpret_cast<Bag*>(this); else return nullptr; }
+        const Bag* ToBag() const { if (IsBag()) return reinterpret_cast<const Bag*>(this); else return nullptr; }
+
         bool IsBag() const { return GetProto()->InventoryType == INVTYPE_BAG; }
         bool IsBroken() const { return GetUInt32Value(ITEM_FIELD_MAXDURABILITY) > 0 && GetUInt32Value(ITEM_FIELD_DURABILITY) == 0; }
         bool CanBeTraded() const;
@@ -369,6 +372,12 @@ class Item : public Object
 
         bool IsUsedInSpell() const { return m_usedInSpell; }
         void SetUsedInSpell(bool state) { m_usedInSpell = state; }
+
+        uint32 GetFakeEntry();
+        bool DeleteFakeEntry();
+        static void DeleteFakeFromDB(uint32 lowGUID);
+        void SetFakeEntry(uint32 entry);
+        bool HasGoodFakeQuality();
     private:
         uint8 m_slot;
         Bag* m_container;

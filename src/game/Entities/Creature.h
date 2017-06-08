@@ -70,6 +70,8 @@ enum CreatureExtraFlags
     CREATURE_EXTRA_FLAG_UNUSED4                = 0x00400000,       // 4194304
     CREATURE_EXTRA_FLAG_DUAL_WIELD_FORCED      = 0x00800000,       // 8388606 creature is alwyas dual wielding (even if unarmed)
     CREATURE_EXTRA_FLAG_UNUSED5                = 0x01000000,       // 16777216
+    CREATURE_EXTRA_FLAG_CUSTOM_VENDOR          = 0x02000000,       // 33554432 custom flag for multigossip vendor, not used in any blizzlike content
+    CREATURE_EXTRA_FLAG_CUSTOM_TRAINER         = 0x04000000,       // 67108864 custom flag for multigossip trainer, not used in any blizzlike content
 };
 
 // GCC have alternative #pragma pack(N) syntax and old gcc version not support pack(push,N), also any gcc version not support it at some platform
@@ -478,6 +480,7 @@ struct TrainerSpell
 
     // helpers
     bool IsCastable() const { return learnedSpell != spell; }
+    bool operator<(const TrainerSpell& rhs) const { return (reqLevel < rhs.reqLevel) || ((reqLevel == rhs.reqLevel) && (spell < rhs.spell)); }
 };
 
 typedef std::unordered_map < uint32 /*spellid*/, TrainerSpell > TrainerSpellMap;

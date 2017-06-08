@@ -707,7 +707,7 @@ void WorldSession::HandleListInventoryOpcode(WorldPacket& recv_data)
     SendListInventory(guid);
 }
 
-void WorldSession::SendListInventory(ObjectGuid vendorguid) const
+void WorldSession::SendListInventory(ObjectGuid vendorguid, uint32 entry) const
 {
     DEBUG_LOG("WORLD: Sent SMSG_LIST_INVENTORY");
 
@@ -724,7 +724,7 @@ void WorldSession::SendListInventory(ObjectGuid vendorguid) const
     if (uint32 pauseTimer = pCreature->GetInteractionPauseTimer())
         pCreature->GetMotionMaster()->PauseWaypoints(pauseTimer);
 
-    VendorItemData const* vItems = pCreature->GetVendorItems();
+    VendorItemData const* vItems = entry ? sObjectMgr.GetNpcVendorItemList(entry) : pCreature->GetVendorItems();
     VendorItemData const* tItems = pCreature->GetVendorTemplateItems();
 
     if (!vItems && !tItems)
