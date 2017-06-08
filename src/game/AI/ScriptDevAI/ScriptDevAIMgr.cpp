@@ -160,6 +160,36 @@ void Script::RegisterSelf(bool bReportError)
 //********************************
 //*** Functions to be Exported ***
 
+void ScriptDevAIMgr::OnLogin(Player* pPlayer)
+{
+    Script* pTempScript = GetScript(GetScriptId("scripted_on_events"));
+
+    if (!pTempScript || !pTempScript->pOnLogin)
+        return;
+
+    pTempScript->pOnLogin(pPlayer);
+}
+
+void ScriptDevAIMgr::OnLogout(Player* pPlayer)
+{
+    Script* pTempScript = GetScript(GetScriptId("scripted_on_events"));
+
+    if (!pTempScript || !pTempScript->pOnLogout)
+        return;
+
+    pTempScript->pOnLogout(pPlayer);
+}
+
+void ScriptDevAIMgr::OnPVPKill(Player* pKiller, Player* pKilled)
+{
+    Script* pTempScript = GetScript(GetScriptId("scripted_on_events"));
+
+    if (!pTempScript || !pTempScript->pOnPVPKill)
+        return;
+
+    pTempScript->pOnPVPKill(pKiller, pKilled);
+}
+
 bool ScriptDevAIMgr::OnGossipHello(Player* pPlayer, Creature* pCreature)
 {
     Script* pTempScript = GetScript(pCreature->GetScriptId());
@@ -232,6 +262,31 @@ bool ScriptDevAIMgr::OnGossipSelect(Player* pPlayer, GameObject* pGo, uint32 uiS
 
     pPlayer->GetPlayerMenu()->ClearMenus();
     return pTempScript->pGossipSelectGO(pPlayer, pGo, uiSender, uiAction);
+}
+
+bool ScriptDevAIMgr::OnGossipSelect(Player* pPlayer, Item* pItem, uint32 uiSender, uint32 uiAction, const char* code)
+{
+    debug_log("SD2: Item Gossip selection, sender: %u, action: %u", uiSender, uiAction);
+
+    Script* pTempScript = GetScript(pItem->GetProto()->ScriptId);
+
+    if (!pTempScript)
+        return false;
+
+    if (code)
+    {
+        if (!pTempScript->pGossipSelectItemWithCode)
+            return false;
+
+        pPlayer->GetPlayerMenu()->ClearMenus();
+        return pTempScript->pGossipSelectItemWithCode(pPlayer, pItem, uiSender, uiAction, code);
+    }
+
+    if (!pTempScript->pGossipSelectItem)
+        return false;
+
+    pPlayer->GetPlayerMenu()->ClearMenus();
+    return pTempScript->pGossipSelectItem(pPlayer, pItem, uiSender, uiAction);
 }
 
 uint32 ScriptDevAIMgr::GetDialogStatus(const Player* pPlayer, const Creature* pCreature) const
@@ -560,6 +615,9 @@ void ScriptDevAIMgr::LoadScriptNames()
         ++count;
     }
     while (queryResult->NextRow());
+
+    // OnEvent Changes
+    m_scriptNames.push_back("scripted_on_events");
 
     std::sort(m_scriptNames.begin(), m_scriptNames.end());
 

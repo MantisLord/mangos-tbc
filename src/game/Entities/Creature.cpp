@@ -962,13 +962,22 @@ bool Creature::IsTrainerOf(Player* pPlayer, bool msg) const
         return false;
 
     TrainerSpellData const* cSpells = GetTrainerSpells();
-    TrainerSpellData const* tSpells = GetTrainerTemplateSpells();
+    TrainerSpellData const* tSpells;
+
+    // Multigossip Trainer
+    if (GetCreatureInfo()->ExtraFlags & CREATURE_EXTRA_FLAG_CUSTOM_TRAINER)
+        tSpells = sObjectMgr.GetNpcTrainerTemplateSpells(pPlayer->m_currentTrainerTemplate);
+    else
+        tSpells = GetTrainerTemplateSpells();
 
     // for not pet trainer expected not empty trainer list always
     if ((!cSpells || cSpells->spellList.empty()) && (!tSpells || tSpells->spellList.empty()))
     {
-        sLog.outErrorDb("Creature %u (Entry: %u) have UNIT_NPC_FLAG_TRAINER but have empty trainer spell list.",
-                        GetGUIDLow(), GetEntry());
+        if (GetEntry() != 980002) // Multi-trainer doesn't need a default list
+        {
+            sLog.outErrorDb("Creature %u (Entry: %u) have UNIT_NPC_FLAG_TRAINER but have empty trainer spell list.",
+                GetGUIDLow(), GetEntry());
+        }
         return false;
     }
 
@@ -977,7 +986,7 @@ bool Creature::IsTrainerOf(Player* pPlayer, bool msg) const
         case TRAINER_TYPE_CLASS:
             if (pPlayer->getClass() != GetCreatureInfo()->TrainerClass)
             {
-                if (msg)
+                if (msg || GetCreatureInfo()->ExtraFlags & CREATURE_EXTRA_FLAG_CUSTOM_TRAINER)
                 {
                     pPlayer->GetPlayerMenu()->ClearMenus();
                     switch (GetCreatureInfo()->TrainerClass)
@@ -991,6 +1000,9 @@ bool Creature::IsTrainerOf(Player* pPlayer, bool msg) const
                         case CLASS_SHAMAN: pPlayer->GetPlayerMenu()->SendGossipMenu(5003, GetObjectGuid()); break;
                         case CLASS_WARLOCK: pPlayer->GetPlayerMenu()->SendGossipMenu(5836, GetObjectGuid()); break;
                         case CLASS_WARRIOR: pPlayer->GetPlayerMenu()->SendGossipMenu(4985, GetObjectGuid()); break;
+
+                        default:
+                            return true;
                     }
                 }
                 return false;
@@ -1090,7 +1102,8 @@ bool Creature::CanTrainAndResetTalentsOf(Player* pPlayer) const
 {
     return pPlayer->GetLevel() >= 10
            && GetCreatureInfo()->TrainerType == TRAINER_TYPE_CLASS
-           && pPlayer->getClass() == GetCreatureInfo()->TrainerClass;
+           && pPlayer->getClass() == GetCreatureInfo()->TrainerClass ||
+            GetCreatureInfo()->ExtraFlags & CREATURE_EXTRA_FLAG_CUSTOM_TRAINER;
 }
 
 void Creature::PrepareBodyLootState(Unit* killer)

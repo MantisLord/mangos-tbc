@@ -618,6 +618,7 @@ class Object
 
         Loot* m_loot;
 
+        inline bool IsWorldObject() const { return isType(TYPEMASK_WORLDOBJECT); }
         inline bool IsPlayer() const { return GetTypeId() == TYPEID_PLAYER; }
         inline bool IsCreature() const { return GetTypeId() == TYPEID_UNIT; }
         inline bool IsUnit() const { return isType(TYPEMASK_UNIT); }
@@ -1005,6 +1006,7 @@ class WorldObject : public Object
         InstanceData* GetInstanceData() const;
 
         const char* GetName() const { return m_name.c_str(); }
+        const std::string& GetStdName() const { return m_name; }
         void SetName(const std::string& newname) { m_name = newname; }
 
         virtual const char* GetNameForLocaleIdx(int32 /*locale_idx*/) const { return GetName(); }

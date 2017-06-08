@@ -68,6 +68,7 @@
 #include "Maps/TransportMgr.h"
 #include "Anticheat/Anticheat.hpp"
 #include "Spells/SpellStacking.h"
+#include "AutoBroadcast/AutoBroadcastMgr.h"
 
 #ifdef BUILD_AHBOT
  #include "AuctionHouseBot/AuctionHouseBot.h"
@@ -140,6 +141,10 @@ World::World() : mail_timer(0), mail_timer_expires(0), m_NextDailyQuestReset(0),
 
     for (bool& m_configBoolValue : m_configBoolValues)
         m_configBoolValue = false;
+
+    for (int i = 0; i < 2; ++i)
+        for (int k = 0; k < MAX_PLAYER_LEVEL; ++k)
+            m_experienceBrackets[i][k] = 1;
 }
 
 /// World destructor
@@ -618,6 +623,9 @@ void World::LoadConfigSettings(bool reload)
 
     setConfigMin(CONFIG_UINT32_MASS_MAILER_SEND_PER_TICK, "MassMailer.SendPerTick", 10, 1);
 
+    setConfig(CONFIG_BOOL_EXTERNAL_MAIL, "ExternalMail", 0);
+    setConfig(CONFIG_UINT32_EXTERNAL_MAIL_INTERVAL, "ExternalMailInterval", 60);
+
     setConfig(CONFIG_UINT32_UPTIME_UPDATE, "UpdateUptimeInterval", 10);
     if (reload)
     {
@@ -817,6 +825,13 @@ void World::LoadConfigSettings(bool reload)
     setConfigMinMax(CONFIG_UINT32_CHARDELETE_MIN_LEVEL, "CharDelete.MinLevel", 0, 0, getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL));
     setConfig(CONFIG_UINT32_CHARDELETE_KEEP_DAYS, "CharDelete.KeepDays", 30);
 
+    setConfig(CONFIG_BOOL_AUTOBROADCAST_ENABLED, "AutoBroadcast.On", false);
+    setConfig(CONFIG_UINT32_AUTOBROADCAST_TIMER, "AutoBroadcast.Timer", 60000);
+    setConfig(CONFIG_UINT32_AUTOBROADCAST_CENTER, "AutoBroadcast.Center", 0);
+
+    setConfig(CONFIG_UINT32_BOOST_LEVEL, "Boost.Level", 58);
+    setConfig(CONFIG_UINT32_BOOST_MIN_LEVEL_RESTRICTED, "Boost.MinLevelRestricted", 20);
+
     if (configNoReload(reload, CONFIG_UINT32_GUID_RESERVE_SIZE_CREATURE, "GuidReserveSize.Creature", 100))
         setConfig(CONFIG_UINT32_GUID_RESERVE_SIZE_CREATURE,   "GuidReserveSize.Creature",   100);
     if (configNoReload(reload, CONFIG_UINT32_GUID_RESERVE_SIZE_GAMEOBJECT, "GuidReserveSize.GameObject", 100))
@@ -876,6 +891,33 @@ void World::LoadConfigSettings(bool reload)
     setConfig(CONFIG_BOOL_LFG_ENABLED, "Lfg.Enabled", true);
 
     setConfig(CONFIG_BOOL_REGEN_ZONE_AREA_ON_STARTUP, "Spawns.ZoneArea", false);
+    
+    setConfig(CONFIG_UINT32_MAX_RESPEC_COST, "MaxRespecCost", 50);
+    setConfig(CONFIG_BOOL_AUTOLEARN_MAX_TALENT_RANK, "AutoLearnMaxTalentRank", false);
+    setConfig(CONFIG_BOOL_START_ALL_SPELLS, "PlayerStart.AllSpells", false);
+    setConfig(CONFIG_BOOL_START_ALL_EXPLORED, "PlayerStart.MapsExplored", false);
+    setConfig(CONFIG_BOOL_DISABLE_DURABILITY_LOSS, "DisableDurabilityLoss", false);
+    setConfig(CONFIG_BOOL_START_NO_ITEMS, "PlayerStart.NoItems", false);
+    setConfig(CONFIG_BOOL_RESET_HP_MANA_COOLDOWNS_AFTER_DUEL, "ResetHPManaCooldownsAfterDuel", false);
+    setConfig(CONFIG_BOOL_PETS_ALWAYS_HAPPY_LOYAL, "PetsAlwaysHappyLoyal", false);
+    setConfig(CONFIG_BOOL_START_MAX_FIRST_AID, "PlayerStart.MaxFirstAid", false);
+    setConfig(CONFIG_BOOL_START_HUNTER_AMMO_REPUTATIONS, "PlayerStart.HunterAmmoReputations", false);
+    setConfig(CONFIG_BOOL_START_ALL_BANK_BAG_SLOTS, "PlayerStart.AllBankBagSlots", false);
+    setConfig(CONFIG_BOOL_ENABLE_MALL_GRAVEYARD, "EnableMallGraveyard", false);
+    setConfig(CONFIG_BOOL_RESET_POWERS_COOLDOWNS_ON_BG_JOIN, "ResetPowersCooldownsOnBGJoin", false);
+    setConfig(CONFIG_BOOL_INSTANT_CAST_DURING_BG_ARENA_PREP, "InstantCastDuringBGArenaPrep", false);
+    setConfig(CONFIG_BOOL_MAX_WEAPON_SKILLS_ON_TRAINING, "MaxWeaponSkillsOnTraining", false);
+    setConfig(CONFIG_BOOL_ROGUE_POISON_DURATION_EXTEND, "RoguePoisonDurationExtend", false);
+    setConfig(CONFIG_BOOL_START_ALL_PET_STABLE_SLOTS, "PlayerStart.AllPetStableSlots", false);
+
+    // Location restrictions
+    setConfig(CONFIG_BOOL_AREA_RESTRICTION, "Area.RestrictionEnabled", false);
+    std::string enabledAreaIds = sConfig.GetStringDefault("Area.enabledAreaIds", "");
+    parseAllowedAreaIds(enabledAreaIds.c_str());
+
+    setConfig(CONFIG_BOOL_ZONE_RESTRICTION, "Zone.RestrictionEnabled", false);
+    std::string enabledZoneIds = sConfig.GetStringDefault("Zone.enabledZoneIds", "");
+    parseAllowedZoneIds(enabledZoneIds.c_str());
 
     sLog.outString();
 }
@@ -1022,6 +1064,9 @@ void World::SetInitialWorldSettings()
     sLog.outString("Checking Spell Cone Data...");
     sObjectMgr.CheckSpellCones();
 
+    sLog.outString("Loading Disabled Spells...");
+    sObjectMgr.LoadSpellDisabledEntrys();
+
     sLog.outString("Loading Spell Elixir types...");
     sSpellMgr.LoadSpellElixirs();
 
@@ -1051,6 +1096,9 @@ void World::SetInitialWorldSettings()
 
     sLog.outString("Loading Item Texts...");
     sObjectMgr.LoadItemTexts();
+
+    sLog.outString("Loading Transmogrifications...");
+    sObjectMgr.LoadTransmogrifications();
 
     sLog.outString("Loading Creature Model Based Info Data...");
     sObjectMgr.LoadCreatureModelInfo();
@@ -1410,6 +1458,12 @@ void World::SetInitialWorldSettings()
     // Update groups with offline leader after delay in seconds
     m_timers[WUPDATE_GROUPS].SetInterval(IN_MILLISECONDS);
 
+    // Next auto-broadcast time
+    m_timers[WUPDATE_AUTOBROADCAST].SetInterval(getConfig(CONFIG_UINT32_AUTOBROADCAST_TIMER));
+
+    // handle timer for external mail
+    m_timers[WUPDATE_EXT_MAIL].SetInterval(getConfig(CONFIG_UINT32_EXTERNAL_MAIL_INTERVAL) * IN_MILLISECONDS);
+
     // to set mailtimer to return mails every day between 4 and 5 am
     // mailtimer is increased when updating auctions
     // one second is 1000 -(tested on win system)
@@ -1453,8 +1507,20 @@ void World::SetInitialWorldSettings()
     SetMonthlyQuestResetTime();
     sLog.outString();
 
+    sLog.outString("Loading Experience brackets...");
+    LoadExperienceBrackets();
+    sLog.outString();
+
     sLog.outString("Loading Spam records...");
     LoadSpamRecords();
+    sLog.outString();
+
+    sLog.outString("Loading AutoBroadcasts...");
+    sAutoBroadCastMgr.load();
+    sLog.outString();
+
+    sLog.outString("Loading filtered chat messages...");
+    LoadChatFilteredMessages();
     sLog.outString();
 
     sLog.outString("Starting Game Event system...");
@@ -1605,6 +1671,17 @@ void World::Update(uint32 diff)
     ///-Update mass mailer tasks if any
     sMassMailMgr.Update();
 
+    // Handle external mail
+    if (getConfig(CONFIG_BOOL_EXTERNAL_MAIL))
+    {
+        m_timers[WUPDATE_EXT_MAIL].Update(diff);
+        if (m_timers[WUPDATE_EXT_MAIL].Passed())
+        {
+            WorldSession::SendExternalMails();
+            m_timers[WUPDATE_EXT_MAIL].Reset();
+        }
+    }
+
     /// Handle daily quests reset time
     if (m_gameTime > m_NextDailyQuestReset)
         ResetDailyQuests();
@@ -1739,6 +1816,16 @@ void World::Update(uint32 diff)
 
     // update the instance reset times
     sMapPersistentStateMgr.Update();
+
+    // Update AutoBroadcast
+    if (getConfig(CONFIG_BOOL_AUTOBROADCAST_ENABLED))
+    {
+        if (m_timers[WUPDATE_AUTOBROADCAST].Passed())
+        {
+            m_timers[WUPDATE_AUTOBROADCAST].Reset();
+            sAutoBroadCastMgr.SendAutoBroadcast();
+        }
+    }
 
     // And last, but not least handle the issued cli commands
     ProcessCliCommands();
@@ -1962,6 +2049,26 @@ void World::SendDefenseMessageBroadcastText(uint32 zoneId, uint32 textId)
             }
         }
     }
+}
+
+void World::SendWorldTextPvpMessage(int32 string_id, ...)
+{
+    va_list ap;
+    va_start(ap, string_id);
+
+    MaNGOS::WorldWorldTextBuilder wt_builder(string_id, &ap);
+    MaNGOS::LocalizedPacketListDo<MaNGOS::WorldWorldTextBuilder> wt_do(wt_builder);
+    for (SessionMap::const_iterator itr = m_sessions.begin(); itr != m_sessions.end(); ++itr)
+    {
+        if (WorldSession* session = itr->second)
+        {
+            Player* player = session->GetPlayer();
+            if (player && player->IsInWorld() && !player->IsIgnoringPvpMessages())
+                wt_do(player);
+        }
+    }
+
+    va_end(ap);
 }
 
 /// Kick (and save) all players
@@ -2442,6 +2549,24 @@ void World::LoadEventGroupChosen()
         GenerateEventGroupEvents(true, true, false);
 }
 
+void World::LoadExperienceBrackets()
+{
+    auto result = CharacterDatabase.Query("SELECT low, high, team, value FROM experience_bracket_cap");
+    if (result)
+    {
+        do
+        {
+            Field* fields = result->Fetch();
+            uint32 low = fields[0].GetUInt32();
+            uint32 high = fields[1].GetUInt32();
+            uint32 team = fields[2].GetUInt32();
+            uint32 value = fields[3].GetUInt32();
+            for (; low <= high; low++)
+                m_experienceBrackets[team][low] = value;
+        } while (result->NextRow());
+    }
+}
+
 void World::LoadSpamRecords(bool reload)
 {
     auto queryResult = WorldDatabase.Query("SELECT record FROM spam_records");
@@ -2915,4 +3040,118 @@ void World::StartBGQueueThread()
     {
         m_bgQueue.Update();
     });
+}
+
+// Custom
+void World::GetExperienceCapArray(Team team, std::array<uint32, MAX_PLAYER_LEVEL>& capArray)
+{
+    capArray = m_experienceBrackets[team == HORDE ? 0 : 1];
+}
+
+uint32 World::GetExperienceCapForLevel(uint32 level, Team team)
+{
+    return m_experienceBrackets[team == HORDE ? 0 : 1][level];
+}
+
+void World::parseAllowedAreaIds(const char* allowedAreaIds)
+{
+    if (!m_areaEnabledIds)
+        m_areaEnabledIds = new std::set<uint32>();
+    else {
+        delete m_areaEnabledIds;
+        m_areaEnabledIds = new std::set<uint32>();
+
+        if (!getConfig(CONFIG_BOOL_AREA_RESTRICTION))
+            return;
+    }
+
+    uint32 strLength = strlen(allowedAreaIds) + 1;
+    char* areaList = new char[strLength];
+    memcpy(areaList, allowedAreaIds, sizeof(char) * strLength);
+
+    char* idstr = strtok(areaList, ",");
+    while (idstr)
+    {
+        m_areaEnabledIds->insert(uint32(atoi(idstr)));
+        idstr = strtok(NULL, ",");
+    }
+
+    delete[] areaList;
+}
+
+bool World::IsAreaEnabled(uint32 areaId)
+{
+    return m_areaEnabledIds->find(areaId) != m_areaEnabledIds->end();
+}
+
+void World::parseAllowedZoneIds(const char* allowedZoneIds)
+{
+    if (!m_zoneEnabledIds)
+        m_zoneEnabledIds = new std::set<uint32>();
+    else {
+        delete m_zoneEnabledIds;
+        m_zoneEnabledIds = new std::set<uint32>();
+
+        if (!getConfig(CONFIG_BOOL_ZONE_RESTRICTION))
+            return;
+    }
+
+    uint32 strLength = strlen(allowedZoneIds) + 1;
+    char* zoneList = new char[strLength];
+    memcpy(zoneList, allowedZoneIds, sizeof(char) * strLength);
+
+    char* idstr = strtok(zoneList, ",");
+    while (idstr)
+    {
+        m_zoneEnabledIds->insert(uint32(atoi(idstr)));
+        idstr = strtok(NULL, ",");
+    }
+
+    delete[] zoneList;
+}
+
+bool World::IsZoneEnabled(uint32 zoneId)
+{
+    return m_zoneEnabledIds->find(zoneId) != m_zoneEnabledIds->end();
+}
+
+void World::LoadChatFilteredMessages()
+{
+    m_filteredMessages.clear(); // in case of reload
+
+    auto result = WorldDatabase.Query("SELECT text FROM chat_filtered");
+    if (result)
+    {
+        do
+        {
+            std::string msg = result->Fetch()->GetString();
+            std::transform(msg.begin(), msg.end(), msg.begin(), ::toupper);
+
+            m_filteredMessages.push_back(msg);
+        }
+        while (result->NextRow());
+    }
+
+    sLog.outString(">> Loaded %lu filtered chat messages", m_filteredMessages.size());
+    sLog.outString();
+}
+
+bool World::ChatMessageIsFiltered(std::string& msg)
+{
+    std::string filtered;
+    filtered.resize(msg.size() + 1);
+
+    for (std::string::const_iterator itr = msg.begin(); itr != msg.end(); ++itr)
+        if (
+            ((*itr) >= 'a' && (*itr) <= 'z')
+            || ((*itr) >= 'A' && (*itr) <= 'Z')
+            || ((*itr) >= '0' && (*itr) <= '9')
+            )
+            filtered.push_back(::toupper(*itr));
+
+    for (std::vector<std::string>::const_iterator itr = m_filteredMessages.begin(); itr != m_filteredMessages.end(); ++itr)
+        if (filtered.find(*itr) != std::string::npos)
+            return true;
+
+    return false;
 }

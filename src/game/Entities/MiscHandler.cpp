@@ -1396,8 +1396,8 @@ void WorldSession::HandleCommentatorModeOpcode(WorldPacket& recv_data)
 
     Player* _player = GetPlayer();
 
-    // Allow commentator mode only for players in GM mode
-    if (!_player->IsGameMaster())
+    // Allow commentator mode only for spectators.
+    if (!_player->IsSpectator())
         return;
 
     // This opcode can be used in three ways:

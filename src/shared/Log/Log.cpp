@@ -69,8 +69,8 @@ enum LogType
 const int LogType_count = int(LogError) + 1;
 
 Log::Log() :
-    raLogfile(nullptr), logfile(nullptr), gmLogfile(nullptr), charLogfile(nullptr), dberLogfile(nullptr),
-    eventAiErLogfile(nullptr), scriptErrLogFile(nullptr), worldLogfile(nullptr), customLogFile(nullptr), m_colored(false), m_includeTime(false), m_gmlog_per_account(false), m_scriptLibName(nullptr)
+    raLogfile(nullptr), logfile(nullptr), gmLogfile(nullptr), charLogfile(nullptr), dberLogfile(nullptr), arenaLogFile(nullptr),
+    eventAiErLogfile(nullptr), scriptErrLogFile(nullptr), worldLogfile(nullptr), customLogFile(nullptr), announceLogFile(nullptr), m_colored(false), m_includeTime(false), m_gmlog_per_account(false), m_scriptLibName(nullptr)
 {
     Initialize();
 }
@@ -265,6 +265,7 @@ void Log::Initialize()
     }
 
     charLogfile = openLogFile("CharLogFile", "CharLogTimestamp", "a");
+    arenaLogFile = openLogFile("ArenaLogFile", nullptr, "a");
     dberLogfile = openLogFile("DBErrorLogFile", nullptr, "a");
     eventAiErLogfile = openLogFile("EventAIErrorLogFile", nullptr, "a");
     scriptErrLogFile = openLogFile("SD2ErrorLogFile", nullptr, "a");
@@ -272,6 +273,7 @@ void Log::Initialize()
     worldLogfile = openLogFile("WorldLogFile", "WorldLogTimestamp", "a");
     scriptErrLogFile = openLogFile("SD2ErrorLogFile", nullptr, "a");
     customLogFile = openLogFile("CustomLogFile", nullptr, "a");
+    announceLogFile = openLogFile("AnnounceLogFile", nullptr, "a");
 
     // Main log file settings
     m_includeTime  = sConfig.GetBoolDefault("LogTime", false);
@@ -813,6 +815,26 @@ void Log::outChar(const char* str, ...)
     }
 }
 
+void Log::outArena(const char* str, ...)
+{
+    if (!str)
+        return;
+
+    std::lock_guard<std::mutex> guard(m_worldLogMtx);
+    if (arenaLogFile)
+    {
+        va_list ap;
+        outTimestamp(arenaLogFile);
+        va_start(ap, str);
+        vfprintf(arenaLogFile, str, ap);
+        fprintf(arenaLogFile, "\n");
+        va_end(ap);
+        fflush(arenaLogFile);
+    }
+
+    fflush(stdout);
+}
+
 void Log::outErrorScriptLib()
 {
     std::lock_guard<std::mutex> guard(m_worldLogMtx);
@@ -968,6 +990,26 @@ void Log::outCustomLog(const char* str, ...)
         fprintf(customLogFile, "\n");
         va_end(ap);
         fflush(customLogFile);
+    }
+
+    fflush(stdout);
+}
+
+void Log::outAnnounceLog(const char* str, ...)
+{
+    if (!str)
+        return;
+
+    std::lock_guard<std::mutex> guard(m_worldLogMtx);
+    if (announceLogFile)
+    {
+        va_list ap;
+        outTimestamp(announceLogFile);
+        va_start(ap, str);
+        vfprintf(announceLogFile, str, ap);
+        fprintf(announceLogFile, "\n");
+        va_end(ap);
+        fflush(announceLogFile);
     }
 
     fflush(stdout);

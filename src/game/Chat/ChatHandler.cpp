@@ -76,6 +76,10 @@ bool WorldSession::CheckChatMessage(std::string& msg, bool addon/* = false*/)
             return false;
         }
     }
+
+    if (sWorld.ChatMessageIsFiltered(msg))
+        return false;
+
     return true;
 }
 

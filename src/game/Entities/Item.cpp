@@ -22,6 +22,7 @@
 #include "Server/WorldPacket.h"
 #include "Database/DatabaseEnv.h"
 #include "Entities/ItemEnchantmentMgr.h"
+#include "Entities/ItemPrototype.h"
 #include "Server/SQLStorages.h"
 #include "Loot/LootMgr.h"
 #include "Spells/SpellTargetDefines.h"
@@ -1232,4 +1233,45 @@ void Item::SetLootState(ItemLootUpdateState state)
 
     if (m_lootState != ITEM_LOOT_NONE && m_lootState != ITEM_LOOT_UNCHANGED && m_lootState != ITEM_LOOT_TEMPORARY)
         SetState(ITEM_CHANGED);
+}
+
+uint32 Item::GetFakeEntry()
+{
+    ItemFakeEntryContainer::const_iterator itr = sObjectMgr._itemFakeEntryStore.find(GetGUIDLow());
+    if (itr == sObjectMgr._itemFakeEntryStore.end())
+        return 0;
+
+    return itr->second;
+}
+
+bool Item::DeleteFakeEntry()
+{
+    if (!GetFakeEntry())
+        return false;
+
+    GetOwner()->SetUInt32Value(PLAYER_VISIBLE_ITEM_1_0 + (GetSlot() * MAX_VISIBLE_ITEM_OFFSET), GetEntry());
+    DeleteFakeFromDB(GetGUIDLow());
+    return true;
+}
+
+void Item::DeleteFakeFromDB(uint32 lowGUID)
+{
+    sObjectMgr._itemFakeEntryStore.erase(lowGUID);
+    CharacterDatabase.PExecute("DELETE FROM custom_transmogrification WHERE Guid = %u", lowGUID);
+}
+
+void Item::SetFakeEntry(uint32 entry)
+{
+    GetOwner()->SetUInt32Value(PLAYER_VISIBLE_ITEM_1_0 + (GetSlot() * MAX_VISIBLE_ITEM_OFFSET), entry);
+    sObjectMgr._itemFakeEntryStore[GetGUIDLow()] = entry;
+    CharacterDatabase.PExecute("REPLACE INTO custom_transmogrification (Guid, FakeEntry) VALUES (%u, %u)", GetGUIDLow(), entry);
+}
+
+bool Item::HasGoodFakeQuality()
+{
+    uint32 quality = GetProto()->Quality;
+    if (quality == ITEM_QUALITY_UNCOMMON || quality == ITEM_QUALITY_RARE || quality == ITEM_QUALITY_EPIC)
+        return true;
+
+    return false;
 }

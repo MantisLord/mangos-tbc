@@ -1070,7 +1070,14 @@ uint32 Unit::DealDamage(Unit* dealer, Unit* victim, uint32 damage, CleanDamage c
         damage = health - 1;
 
     if (health <= damage)
+    {
         Kill(dealer, victim, damagetype, spellInfo, durabilityLoss, duel_hasEnded);
+
+        // Hook for OnPVPKill Event
+        // DISABLED FOR NOW: dealer becomes nullptr: "when DOT caster despawns, dealer is nullptr" - kw
+        //if (victim->IsPlayer() && dealer->IsPlayer())
+        //    sScriptDevAIMgr.OnPVPKill(dealer->ToPlayer(), victim->ToPlayer());
+    }
     else                                                    // if (health <= damage)
         HandleDamageDealt(dealer, victim, damage, cleanDamage, damagetype, damageSchoolMask, spellInfo, duel_hasEnded);
 

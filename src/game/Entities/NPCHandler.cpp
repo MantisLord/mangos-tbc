@@ -125,7 +125,7 @@ static void SendTrainerSpellHelper(WorldPacket& data, TrainerSpell const* tSpell
         data << uint32(0);
 }
 
-void WorldSession::SendTrainerList(ObjectGuid guid) const
+void WorldSession::SendTrainerList(ObjectGuid guid, uint32 entry) const
 {
     DEBUG_LOG("WORLD: SendTrainerList");
 
@@ -145,7 +145,7 @@ void WorldSession::SendTrainerList(ObjectGuid guid) const
         return;
 
     TrainerSpellData const* cSpells = unit->GetTrainerSpells();
-    TrainerSpellData const* tSpells = unit->GetTrainerTemplateSpells();
+    TrainerSpellData const* tSpells = entry ? sObjectMgr.GetNpcTrainerTemplateSpells(entry) : unit->GetTrainerTemplateSpells();
 
     if (!cSpells && !tSpells)
     {
@@ -251,7 +251,13 @@ void WorldSession::HandleTrainerBuySpellOpcode(WorldPacket& recv_data)
 
     // check present spell in trainer spell list
     TrainerSpellData const* cSpells = unit->GetTrainerSpells();
-    TrainerSpellData const* tSpells = unit->GetTrainerTemplateSpells();
+    TrainerSpellData const* tSpells;
+
+    // Multigossip Trainer
+    if (unit->GetCreatureInfo()->ExtraFlags & CREATURE_EXTRA_FLAG_CUSTOM_TRAINER)
+        tSpells = sObjectMgr.GetNpcTrainerTemplateSpells(GetPlayer()->m_currentTrainerTemplate);
+    else
+        tSpells = unit->GetTrainerTemplateSpells();
 
     if (!cSpells && !tSpells)
         return;
@@ -378,6 +384,18 @@ void WorldSession::HandleGossipSelectOptionOpcode(WorldPacket& recv_data)
 
         if (!sScriptDevAIMgr.OnGossipSelect(_player, pGo, sender, action, code.empty() ? nullptr : code.c_str()))
             _player->OnGossipSelect(pGo, gossipListId, menuId);
+    }
+    else if (guid.IsItem())
+    {
+        Item* pItem = GetPlayer()->GetItemByGuid(guid);
+
+        if (!pItem)
+        {
+            DEBUG_LOG("WORLD: HandleGossipSelectOptionOpcode - %s not found or you can't interact with it.", guid.GetString().c_str());
+            return;
+        }
+
+        sScriptDevAIMgr.OnGossipSelect(_player, pItem, sender, action, code.empty() ? nullptr : code.c_str());
     }
 }
 

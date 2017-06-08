@@ -185,7 +185,8 @@ GroupQueueInfo* BattleGroundQueueItem::AddGroup(ObjectGuid leader, AddGroupToQue
     // announce world (this don't need mutex)
     if (isRated && sWorld.getConfig(CONFIG_BOOL_ARENA_QUEUE_ANNOUNCER_JOIN))
     {
-        sWorld.SendWorldText(LANG_ARENA_QUEUE_ANNOUNCE_WORLD_JOIN, queueInfo->arenaType, queueInfo->arenaType, queueInfo->arenaTeamRating);
+        sWorld.SendWorldTextPvpMessage(LANG_ARENA_QUEUE_ANNOUNCE_WORLD_JOIN, queueInfo->arenaType, queueInfo->arenaType, queueInfo->arenaTeamRating);
+        sLog.outAnnounceLog("[Arena Queue Announcer]: All Arenas -- Joined : %ux%u : %u", queueInfo->arenaType, queueInfo->arenaType, queueInfo->arenaTeamRating);
     }
 
     // add players from group to ginfo
@@ -244,7 +245,9 @@ GroupQueueInfo* BattleGroundQueueItem::AddGroup(ObjectGuid leader, AddGroupToQue
                     // System message
                     else
                     {
-                        sWorld.SendWorldText(LANG_BG_QUEUE_ANNOUNCE_WORLD, bgName, q_min_level, qMaxLevel,
+                        sWorld.SendWorldTextPvpMessage(LANG_BG_QUEUE_ANNOUNCE_WORLD, bgName, q_min_level, qMaxLevel,
+                            qAlliance, (minPlayers > qAlliance) ? minPlayers - qAlliance : (uint32)0, qHorde, (minPlayers > qHorde) ? minPlayers - qHorde : (uint32)0);
+                        sLog.outAnnounceLog("[BG Queue Announcer]: %s -- [%u - %u] A : %u / %u, H : %u / %u", bgName, q_min_level, qMaxLevel,
                             qAlliance, (minPlayers > qAlliance) ? minPlayers - qAlliance : (uint32)0, qHorde, (minPlayers > qHorde) ? minPlayers - qHorde : (uint32)0);
                     }
                 });
@@ -398,7 +401,10 @@ void BattleGroundQueueItem::RemovePlayer(BattleGroundQueue& queue, ObjectGuid gu
 
     // announce to world if arena team left queue for rated match, show only once
     if (group->arenaType != ARENA_TYPE_NONE && group->isRated && group->players.empty() && sWorld.getConfig(CONFIG_BOOL_ARENA_QUEUE_ANNOUNCER_EXIT))
-        sWorld.SendWorldText(LANG_ARENA_QUEUE_ANNOUNCE_WORLD_EXIT, group->arenaType, group->arenaType, group->arenaTeamRating);
+    {
+        sWorld.SendWorldTextPvpMessage(LANG_ARENA_QUEUE_ANNOUNCE_WORLD_EXIT, group->arenaType, group->arenaType, group->arenaTeamRating);
+        sLog.outAnnounceLog("[Arena Queue Announcer]: All Arenas -- Left : %ux%u : %u", group->arenaType, group->arenaType, group->arenaTeamRating);
+    }
 
     // if player leaves queue and he is invited to rated arena match, then he have to loose
     if (group->isInvitedToBgInstanceGuid && group->isRated && decreaseInvitedCount)

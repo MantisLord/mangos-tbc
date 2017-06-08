@@ -327,6 +327,9 @@ class ChatHandler
         bool HandleDebugDbscriptSourced(char* args);
         bool HandleDebugDbscriptGuided(char* args);
 
+        bool HandleGetItemsAndEnchantIdsCommand(char* args);
+        bool HandleGetGemEnchantmentIdCommand(char* args);
+
         bool HandleSD2HelpCommand(char* args);
         bool HandleSD2ScriptCommand(char* args);
 
@@ -540,6 +543,8 @@ class ChatHandler
 
         bool HandleReloadAreaTriggerTavernCommand(char* args);
         bool HandleReloadAreaTriggerTeleportCommand(char* args);
+        bool HandleReloadAutoBroadcastCommand(char* args);
+        bool HandleReloadChatFilteredCommand(char* args);
         bool HandleReloadBattleEventCommand(char* args);
         bool HandleReloadCommandCommand(char* args);
         bool HandleReloadConditionsCommand(char* args);
@@ -605,6 +610,7 @@ class ChatHandler
         bool HandleReloadSkillFishingBaseLevelCommand(char* args);
         bool HandleReloadSpellAffectCommand(char* args);
         bool HandleReloadSpellAreaCommand(char* args);
+        bool HandleReloadSpellDisabledCommand(char* args);
         bool HandleReloadSpellChainCommand(char* args);
         bool HandleReloadSpellElixirCommand(char* args);
         bool HandleReloadSpellLearnSpellCommand(char* args);
@@ -684,6 +690,7 @@ class ChatHandler
         bool HandleStartCommand(char* args);
         bool HandleDismountCommand(char* args);
         bool HandleSaveCommand(char* args);
+        bool HandleTogglePvpMessages(char* args);
 
         bool HandleNamegoCommand(char* args);
         bool HandleGonameCommand(char* args);
@@ -823,6 +830,15 @@ class ChatHandler
 
         bool HandlePetLevelLoyaltyCommand(char* args);
 
+        // Custom
+        bool HandleXPCommandSet(char* args);
+        bool HandleXPCommandCurrent(char* args);
+        bool HandleXPCommandAvailable(char* args);
+        bool HandleTbcRacesBoostRestriction(char* args); // custom voa
+        bool HandleDeserterCommand(char* args);
+        bool HandleUnDeserterCommand(char* args);
+        bool HandleServerFirstPrint(char* args);
+
         Player*   getSelectedPlayer() const;
         Unit*     getSelectedUnit(bool self = true) const;
         Creature* getSelectedCreature() const;
@@ -833,6 +849,8 @@ class ChatHandler
         std::string GetNameLink(Player* chr) const;
 
         GameObject* GetGameObjectWithGuid(uint32 lowguid, uint32 entry) const;
+        
+        bool HandleFaceMeCommand(char* args);
 
         // Utility methods for commands
         bool ShowAccountListHelper(std::unique_ptr<QueryResult> queryResult, uint32* limit = nullptr, bool title = true, bool error = true);
