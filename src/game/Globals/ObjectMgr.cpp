@@ -9304,6 +9304,9 @@ void ObjectMgr::LoadTrainers(char const* tableName, bool isTemplates)
         if (SpellMgr::IsProfessionSpell(spell))
             data.trainerType = 2;
 
+        if (mTrainerSpellSet.find(trainerSpell) == mTrainerSpellSet.end())
+            mTrainerSpellSet.insert(trainerSpell);
+
         ++count;
     }
     while (queryResult->NextRow());

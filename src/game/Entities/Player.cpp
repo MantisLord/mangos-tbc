@@ -16083,7 +16083,7 @@ void Player::_LoadQuestStatus(std::unique_ptr<QueryResult> queryResult)
                 if (questStatusData.m_rewarded)
                 {
                     // learn rewarded spell if unknown
-                    learnQuestRewardedSpells(pQuest);
+                    learnQuestRewardedOrSrcSpells(pQuest);
 
                     // set rewarded title if any
                     if (pQuest->GetCharTitleId())
@@ -19698,11 +19698,166 @@ void Player::learnDefaultSpells()
     }
 }
 
-void Player::learnQuestRewardedSpells(Quest const* quest)
+void Player::learnClassLevelSpells(bool includeHighLevelQuestRewards)
 {
-    uint32 spell_id = quest->GetRewSpellCast();
+    ChrClassesEntry const* clsEntry = sChrClassesStore.LookupEntry(getClass());
+    if (!clsEntry)
+        return;
+    uint32 family = clsEntry->spellfamily;
 
-    // skip quests without rewarded spell
+    // special cases which aren't sourced from trainers and normally require quests to obtain - added here for convenience
+    ObjectMgr::QuestMap const& qTemplates = sObjectMgr.GetQuestTemplates();
+    for (const auto& qTemplate : qTemplates)
+    {
+        Quest const* quest = qTemplate.second;
+        if (!quest)
+            continue;
+
+        // only class quests player could do
+        if (quest->GetRequiredClasses() == 0 || !SatisfyQuestClass(quest, false) || !SatisfyQuestRace(quest, false) || !SatisfyQuestLevel(quest, false))
+            continue;
+
+        // custom filter for scripting purposes
+        if (!includeHighLevelQuestRewards && quest->GetMinLevel() >= 60)
+            continue;
+
+        learnQuestRewardedOrSrcSpells(quest);
+
+        if (quest->GetSrcSpell())
+            learnQuestRewardedOrSrcSpells(quest, true);
+    }
+    // spells normally learned from items instead of trainers or quests, there's probably a better way to do this
+    if (GetLevel() == 70)
+    {
+        switch (getClass())
+        {
+            case CLASS_PRIEST:
+            {
+                if (!HasSpell(39374)) // Prayer of Shadow Protection (rank 2)
+                    learnSpell(39374, false);
+                break;
+            }
+            case CLASS_MAGE:
+            {
+                if (!HasSpell(27127)) // Arcane Brilliance (rank 2)
+                    learnSpell(27127, false);
+                if (!HasSpell(27090)) // Conjure Water (rank 9)
+                    learnSpell(27090, false);
+                if (!HasSpell(33717)) // Conjure Food (rank 8)
+                    learnSpell(33717, false);
+                if (!HasSpell(43987)) // Ritual of Refreshment
+                    learnSpell(43987, false);
+                break;
+            }
+            case CLASS_DRUID:
+            {
+                if (!HasSpell(26991)) // Gift of the Wild (rank 3)
+                    learnSpell(26991, false);
+                break;
+            }
+        }
+    }
+
+    std::set<TrainerSpell> const& trainerSpells = sObjectMgr.GetTrainerSpells();
+    for (const auto& tSpell : trainerSpells)
+    {
+        SpellEntry const* spellInfo = sSpellTemplate.LookupEntry<SpellEntry>(tSpell.spell);
+        if (!spellInfo)
+            continue;
+
+        uint32 reqLevel = 0;
+        if (!IsSpellFitByClassAndRace(tSpell.spell, &reqLevel))
+            continue;
+
+        reqLevel = tSpell.isProvidedReqLevel ? tSpell.reqLevel : std::max(reqLevel, tSpell.reqLevel);
+
+        TrainerSpellState state = GetTrainerSpellState(&tSpell, reqLevel);
+        if (state == TRAINER_SPELL_RED)
+            continue;
+
+        if (tSpell.conditionId && !sObjectMgr.IsConditionSatisfied(tSpell.conditionId, this, GetMap(), this, CONDITION_FROM_TRAINER))
+            continue;
+
+        // special case for Judgement/Seal of Righteousness
+        if (spellInfo->Id == 10321 && getClass() == CLASS_PALADIN)
+        {
+            CastSpell(this, spellInfo->Id, TRIGGERED_OLD_TRIGGERED);
+            continue;
+        }
+
+        // skip other spell families (minus a few exceptions)
+        if (spellInfo->SpellFamilyName != family)
+        {
+            SkillLineAbilityMapBounds bounds = sSpellMgr.GetSkillLineAbilityMapBoundsBySpellId(tSpell.spell);
+            if (bounds.first == bounds.second)
+                continue;
+
+            SkillLineAbilityEntry const* skillInfo = bounds.first->second;
+            if (!skillInfo)
+                continue;
+
+            switch (skillInfo->skillId)
+            {
+            case SKILL_SUBTLETY:
+            case SKILL_POISONS:
+            case SKILL_BEAST_MASTERY:
+            case SKILL_SURVIVAL:
+            case SKILL_DEFENSE:
+            case SKILL_DUAL_WIELD:
+            case SKILL_FERAL_COMBAT:
+            case SKILL_PROTECTION:
+            case SKILL_BEAST_TRAINING:
+            case SKILL_PLATE_MAIL:
+            case SKILL_DEMONOLOGY:
+            case SKILL_ENHANCEMENT:
+            case SKILL_MAIL:
+            case SKILL_HOLY2:
+            case SKILL_LOCKPICKING:
+            case SKILL_SWORDS:
+            case SKILL_AXES:
+            case SKILL_BOWS:
+            case SKILL_GUNS:
+            case SKILL_MACES:
+            case SKILL_2H_SWORDS:
+            case SKILL_STAVES:
+            case SKILL_2H_MACES:
+            case SKILL_2H_AXES:
+            case SKILL_DAGGERS:
+            case SKILL_THROWN:
+            case SKILL_CROSSBOWS:
+            case SKILL_SPEARS:
+            case SKILL_POLEARMS:
+            case SKILL_WANDS:
+            case SKILL_FIST_WEAPONS:
+                break;
+            default:
+                continue;
+            }
+        }
+
+        // skip spells with first rank learned as talent (and all talents then also)
+        uint32 first_rank = sSpellMgr.GetFirstSpellInChain(tSpell.spell);
+        if (GetTalentSpellCost(first_rank) > 0)
+            continue;
+
+        // skip broken spells
+        if (!SpellMgr::IsSpellValid(spellInfo, this, false))
+            continue;
+
+        learnSpell(tSpell.spell, false);
+    }
+}
+
+void Player::learnQuestRewardedOrSrcSpells(Quest const* quest, bool srcSpell)
+{
+    uint32 spell_id = 0;
+
+    if (srcSpell)
+        spell_id = quest->GetSrcSpell();
+    else
+        spell_id = quest->GetRewSpellCast();
+
+    // skip quests without rewarded or source spell
     if (!spell_id)
         return;
 
@@ -19730,7 +19885,7 @@ void Player::learnQuestRewardedSpells(Quest const* quest)
     if (sSpellMgr.GetSpellRank(learned_0) > 1)
         return;
 
-    CastSpell(this, spell_id, TRIGGERED_OLD_TRIGGERED);
+    CastSpell(this, spell_id, TRIGGERED_OLD_TRIGGERED | TRIGGERED_INSTANT_CAST);
 }
 
 void Player::learnQuestRewardedSpells()
@@ -19746,7 +19901,7 @@ void Player::learnQuestRewardedSpells()
         if (!quest)
             continue;
 
-        learnQuestRewardedSpells(quest);
+        learnQuestRewardedOrSrcSpells(quest);
     }
 }
 

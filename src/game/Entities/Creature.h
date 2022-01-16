@@ -460,6 +460,7 @@ struct TrainerSpell
 
     // helpers
     bool IsCastable() const { return learnedSpell != spell; }
+    bool operator<(const TrainerSpell& rhs) const { return (reqLevel < rhs.reqLevel) || ((reqLevel == rhs.reqLevel) && (spell < rhs.spell)); }
 };
 
 typedef std::unordered_map < uint32 /*spellid*/, TrainerSpell > TrainerSpellMap;
