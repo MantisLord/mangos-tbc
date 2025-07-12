@@ -144,8 +144,8 @@ void ChangeEffect(Player* player)
 
     // Force client to reload this player, so changes are visible
     WorldPacket data(SMSG_FORCE_DISPLAY_UPDATE, 8);
-    data << player->GetGuidStr().c_str();
-    // player->BroadcastPacket(data, true);    // Add Send Data to client so relog is not needed and changes can be specateted instantly
+    data << player->GetObjectGuid();
+    player->GetSession()->SendPacket(data, true);
 
     // Do some visual effect ( Vanish visual spell )
     player->CastSpell(player, 24222, TRIGGERED_OLD_TRIGGERED);
