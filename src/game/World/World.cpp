@@ -825,13 +825,6 @@ void World::LoadConfigSettings(bool reload)
     setConfigMinMax(CONFIG_UINT32_CHARDELETE_MIN_LEVEL, "CharDelete.MinLevel", 0, 0, getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL));
     setConfig(CONFIG_UINT32_CHARDELETE_KEEP_DAYS, "CharDelete.KeepDays", 30);
 
-    setConfig(CONFIG_BOOL_AUTOBROADCAST_ENABLED, "AutoBroadcast.On", false);
-    setConfig(CONFIG_UINT32_AUTOBROADCAST_TIMER, "AutoBroadcast.Timer", 60000);
-    setConfig(CONFIG_UINT32_AUTOBROADCAST_CENTER, "AutoBroadcast.Center", 0);
-
-    setConfig(CONFIG_UINT32_BOOST_LEVEL, "Boost.Level", 58);
-    setConfig(CONFIG_UINT32_BOOST_MIN_LEVEL_RESTRICTED, "Boost.MinLevelRestricted", 20);
-
     if (configNoReload(reload, CONFIG_UINT32_GUID_RESERVE_SIZE_CREATURE, "GuidReserveSize.Creature", 100))
         setConfig(CONFIG_UINT32_GUID_RESERVE_SIZE_CREATURE,   "GuidReserveSize.Creature",   100);
     if (configNoReload(reload, CONFIG_UINT32_GUID_RESERVE_SIZE_GAMEOBJECT, "GuidReserveSize.GameObject", 100))
@@ -891,6 +884,13 @@ void World::LoadConfigSettings(bool reload)
     setConfig(CONFIG_BOOL_LFG_ENABLED, "Lfg.Enabled", true);
 
     setConfig(CONFIG_BOOL_REGEN_ZONE_AREA_ON_STARTUP, "Spawns.ZoneArea", false);
+
+    setConfig(CONFIG_BOOL_AUTOBROADCAST_ENABLED, "AutoBroadcast.On", false);
+    setConfig(CONFIG_UINT32_AUTOBROADCAST_TIMER, "AutoBroadcast.Timer", 60000);
+    setConfig(CONFIG_UINT32_AUTOBROADCAST_CENTER, "AutoBroadcast.Center", 0);
+
+    setConfig(CONFIG_UINT32_BOOST_LEVEL, "Boost.Level", 58);
+    setConfig(CONFIG_UINT32_BOOST_MIN_LEVEL_RESTRICTED, "Boost.MinLevelRestricted", 20);
     
     setConfig(CONFIG_UINT32_MAX_RESPEC_COST, "MaxRespecCost", 50);
     setConfig(CONFIG_BOOL_AUTOLEARN_MAX_TALENT_RANK, "AutoLearnMaxTalentRank", false);
@@ -909,6 +909,7 @@ void World::LoadConfigSettings(bool reload)
     setConfig(CONFIG_BOOL_MAX_WEAPON_SKILLS_ON_TRAINING, "MaxWeaponSkillsOnTraining", false);
     setConfig(CONFIG_BOOL_ROGUE_POISON_DURATION_EXTEND, "RoguePoisonDurationExtend", false);
     setConfig(CONFIG_BOOL_START_ALL_PET_STABLE_SLOTS, "PlayerStart.AllPetStableSlots", false);
+    setConfig(CONFIG_BOOL_INSTANT_FLIGHT_PATH, "InstantFlightPath", false);
 
     // Location restrictions
     setConfig(CONFIG_BOOL_AREA_RESTRICTION, "Area.RestrictionEnabled", false);

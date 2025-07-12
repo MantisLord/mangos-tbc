@@ -18801,9 +18801,11 @@ int32 Player::GetTaxiPathSplineOffset() const
     return int32(m_taxiTracker.GetResumeWaypointIndex());
 }
 
-void Player::OnTaxiFlightStart(const TaxiPathEntry* /*path*/)
+void Player::OnTaxiFlightStart(const TaxiPathEntry* path)
 {
-
+    if (sWorld.getConfig(CONFIG_BOOL_INSTANT_FLIGHT_PATH))
+        TaxiFlightInterrupt(true);
+        OnTaxiFlightEnd(path);
 }
 
 void Player::OnTaxiFlightEnd(const TaxiPathEntry* path)

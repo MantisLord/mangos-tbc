@@ -1981,6 +1981,7 @@ InstantCastDuringBGArenaPrep = 1
 MaxWeaponSkillsOnTraining = 1
 RoguePoisonDurationExtend = 1
 PlayerStart.AllPetStableSlots = 1
+InstantFlightPath = 1
 
 ###############################################################################
 # LEVEL BOOST -> Remember to start game event and set worldstate!
