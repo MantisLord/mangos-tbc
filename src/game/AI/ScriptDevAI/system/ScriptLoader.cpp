@@ -16,7 +16,6 @@ extern void AddSC_custom_creatures();
 extern void AddSC_beastmaster();
 extern void AddSC_multitrainer();
 extern void AddSC_npc_transmogrify();
-extern void AddSC_barber();
 extern void AddSC_enchantment_crystal();
 extern void AddSC_instance_azshara_crater();
 extern void AddSC_titler();
@@ -393,7 +392,6 @@ void AddScripts()
     AddSC_beastmaster();
     AddSC_multitrainer();
     AddSC_npc_transmogrify();
-    AddSC_barber();
     AddSC_enchantment_crystal();
     AddSC_instance_azshara_crater();
     AddSC_titler();

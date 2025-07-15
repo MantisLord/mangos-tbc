@@ -23806,8 +23806,8 @@ bool Player::ChangeRace(uint8 newRace)
     std::thread saveAndDisconnectT([&] {
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
-        if (GetSession())
-            GetSession()->LogoutPlayer(); // will save
+        //if (GetSession())
+        //    GetSession()->LogoutPlayer(); // will save
 
         // we need to delete full record of factions
         if (oldTeam != team)

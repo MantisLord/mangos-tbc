@@ -162,11 +162,19 @@ INSERT INTO `npc_text` (`ID`, `text0_0`, `text0_1`, `lang0`, `prob0`, `em0_0`, `
 (42301, 'Changing specs will replace your talents and action bars. You may also assign names to each specialization.', 'Changing specs will replace your talents and action bars. You may also assign names to each specialization.', 0, 0, 1, 1, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
 -- Beastmaster
 (42302, 'Select a beast below you''d like to tame.', 'Select a beast below you''d like to tame.', 0, 0, 1, 1, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
--- 42303-42308 REUSE
--- Race Changer
-(42309, 'Hello $r,\r\n\r\nI can change your race and/or gender if you provide me the character name of whose appearance to copy.\r\n\r\nThe character name you enter must be an eligible race for your class.', 'Hello $r,\r\n\r\nI can change your race and/or gender if you provide me the character name of whose appearance to copy.\r\n\r\nThe character name you enter must be an eligible race for your class.', 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+-- Hans Müller <Shady Plastic Surgeon>
+(42303, 'Sagging? Wrinkles? Crooked nose? I''ll fix you right up.', 'Sagging? Wrinkles? Crooked nose? I''ll fix you right up.', 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+-- Paul <Stylist> (Barber)
+(42304, 'I''ve got the chems here to turn you any shade you want. Let''s make you glisten and glow. Just keep in mind, once this stuff gets on you, it''s probably not ever coming off...', 'I''ve got the chems here to turn you any shade you want. Let''s make you glisten and glow. Just keep in mind, once this stuff gets on you, it''s probably not ever coming off...', 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+(42305, 'Please make a selection.', 'Please make a selection.', 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+(42306, 'What are you looking to get done specifically?', 'What are you looking to get done specifically?', 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+-- Hans Müller <Shady Plastic Surgeon> (cont.)
+(42307, 'Become a different race you say? This will be a bit of a doozy... I''ll try my best.\r\n\r\nWhich race we talkin''?', 'Become a different race you say? This will be a bit of a doozy... I''ll try my best.\r\n\r\nWhich race we talkin''?', 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+(42308, 'Hey, $r! Over here!\r\nYou lookin'' for a big change in your life?\r\n\r\nI am the most qualified provider of special cosmetic operations in this region.\r\n\r\nNo questions, no refunds, and definitely no paper trail!', 'Hey, $r! Over here!\r\nYou lookin'' for a big change in your life?\r\n\r\nI am the most qualified provider of special cosmetic operations in this region.\r\n\r\nNo questions, no refunds, and definitely no paper trail!', 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+-- Appearance Copier
+(42309, 'Hello $c.\r\n\r\nI can make you appear the same as someone else! Please provide the name of the character you want to assume the likeness of.\r\n\r\nThe character must be an eligible race for your class.', 'Hello $c.\r\n\r\nI can make you appear the same as someone else! Please provide the name of the character you want to assume the likeness of.\r\n\r\nThe character must be an eligible race for your class.', 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
 -- Guild Creator
-(42310, 'Greetings $r,\r\n\r\nI can create a personalized guild name for you. Give me a unique name that is under 50 characters and it''s yours.', 'Greetings $r,\r\n\r\nI can create a personalized guild name for you. Give me a unique name that is under 50 characters and it''s yours.', 0, 1, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+(42310, 'Greetings $r,\r\n\r\nI can create a personalized guild name for you. Give me a unique name that is 95 characters or less.', 'Greetings $r,\r\n\r\nI can create a personalized guild name for you. Give me a unique name that is 95 characters or less.', 0, 1, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
 -- Misc
 (42311, 'I''m not sure how to help you, $c.', 'I''m not sure how to help you, $c.', 0, 1, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
 (42312, 'Hello $N. I''ll help you manage your pets.', 'Hello $N. I''ll help you manage your pets.', 0, 1, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -249,10 +257,13 @@ INSERT INTO `npc_text` (`ID`, `text0_0`, `text0_1`, `lang0`, `prob0`, `em0_0`, `
 (50614,'Movement & Positioning','','0','1','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0'),
 (50615,'UNIT_BYTES_1_OFFSET_STAND_STATE (UnitStandStateType)','','0','1','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0');
 
-DELETE FROM `npc_text_broadcast_text` WHERE `Id` IN (99999,99998);
+DELETE FROM `npc_text_broadcast_text` WHERE `Id` IN (99999,99998,99997,99996);
 INSERT INTO `npc_text_broadcast_text` (`Id`, `Prob0`, `BroadcastTextId0`) VALUES
 (99999,1,13644), -- "Need something?"
-(99998,1,15251); -- "Which profession do you seek to learn?"
+(99998,1,15251), -- "Which profession do you seek to learn?"
+-- Paul <Stylist>
+(99997,1,29495), -- Barber (Alliance)
+(99996,1,29498); -- Barber (Horde)
 
 DELETE FROM `script_texts` WHERE `entry` IN (-1800997,-1800998,-1800999);
 INSERT INTO `script_texts` (`entry`,`content_default`,`sound`,`type`,`language`,`emote`,`comment`) VALUES
@@ -503,8 +514,8 @@ INSERT INTO `gossip_menu_option` (`menu_id`, `id`, `option_icon`, `option_text`,
 ('51009','5','2','Forgotten Gnome Camp','1','1','0','0','51244','0','0',NULL,'0'),
 ('51009','6','2','Deeprun Tram Aquarium','1','1','0','0','51245','0','0',NULL,'0'),
 ('51009','7','2','Gurubashi Arena','1','1','0','0','51246','0','0',NULL,'0'),
-('51009','8','2','PLACEHOLDER1','1','1','0','0','-1','0','0',NULL,'0'),
-('51009','9','2','PLACEHOLDER2','1','1','0','0','-1','0','0',NULL,'0'),
+('51009','8','2','PLACEHOLDER1','1','1','0','0','0','0','0',NULL,'0'),
+('51009','9','2','PLACEHOLDER2','1','1','0','0','0','0','0',NULL,'0'),
 ('51009','10','2','Designer Island','1','1','0','0','51238','0','0',"WARNING: Must install patch-3.MPQ in game client's Data directory or you will receive a WoWError upon porting here!",'0'),
 ('51009','11','2','Programmer Isle','1','1','0','0','51239','0','0',"WARNING: Must install patch-3.MPQ in game client's Data directory or you will receive a WoWError upon porting here!",'0'),
 ('51009','12','4','<- Page 3','1','1','51008','0','0','0','0',NULL,'0'),
@@ -668,6 +679,7 @@ INSERT INTO `conditions` (`condition_entry`, `type`, `value1`, `value2`, `flags`
 (15053, -1, 15, 15049, 0); -- Hunter AND Player Level <= 60
 
 REPLACE INTO `creature_template` (`Entry`, `Name`, `SubName`, `IconName`, `MinLevel`, `MaxLevel`, `HeroicEntry`, `DisplayId1`, `DisplayId2`, `DisplayId3`, `DisplayId4`, `Faction`, `Scale`, `Family`, `CreatureType`, `InhabitType`, `RegenerateStats`, `RacialLeader`, `NpcFlags`, `UnitFlags`, `DynamicFlags`, `ExtraFlags`, `CreatureTypeFlags`, `SpeedWalk`, `SpeedRun`, `Detection`, `CallForHelp`, `Pursuit`, `Leash`, `Timeout`, `UnitClass`, `Rank`, `Expansion`, `HealthMultiplier`, `PowerMultiplier`, `DamageMultiplier`, `DamageVariance`, `ArmorMultiplier`, `ExperienceMultiplier`, `MinLevelHealth`, `MaxLevelHealth`, `MinLevelMana`, `MaxLevelMana`, `MinMeleeDmg`, `MaxMeleeDmg`, `MinRangedDmg`, `MaxRangedDmg`, `Armor`, `MeleeAttackPower`, `RangedAttackPower`, `MeleeBaseAttackTime`, `RangedBaseAttackTime`, `DamageSchool`, `MinLootGold`, `MaxLootGold`, `LootId`, `PickpocketLootId`, `SkinningLootId`, `KillCredit1`, `KillCredit2`, `MechanicImmuneMask`, `SchoolImmuneMask`, `ResistanceHoly`, `ResistanceFire`, `ResistanceNature`, `ResistanceFrost`, `ResistanceShadow`, `ResistanceArcane`, `PetSpellDataId`, `MovementType`, `TrainerType`, `TrainerSpell`, `TrainerClass`, `TrainerRace`, `TrainerTemplateId`, `VendorTemplateId`, `EquipmentTemplateId`, `GossipMenuId`, `AIName`, `ScriptName`) VALUES
+(980050, 'Hans Müller', 'Shady Plastic Surgeon', '', 70, 70, 0, 22976, 0, 0, 0, 35, 1, 0, 7, 3, 3, 0, 1, 139394, 0, 2, 0, 0, 0, 20, 0, 0, 0, 0, 1, 0, -1, 1, 1, 1, 1, 1, 1, 1337, 1337, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14267, 0, '', 'plastic_surgeon'),
 (980049, 'Model Daemon', '', '', '70', '70', '0', '16269', '0', '0', '0', '35', '1', '0', '3', '1', '14', '0', '1', '0', '0', '0', '8', '1', '1.14286', '18', '0', '15000', '0', '0', '1', '1', '1', '11.4515', '1', '1', '1', '1', '1', '1', '1', '0', '0', '0', '0', '0', '0', '15', '0', '0', '2000', '2000', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', 'modelviewer_daemon'),
 (980048, 'Titler', 'Giver of Names', '', 69, 70, 0, 20764, 0, 0, 0, 35, 0.33, 0, 7, 3, 14, 0, 1, 0, 0, 2, 8, 0.666668, 0.857143, 30, 0, 0, 0, 0, 1, 1, 1, 1, 1, 15, 1, 1, 1, 10000, 19000, 0, 0, 4611, 5311, 0, 0, 6792, 2290, 0, 2000, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, '', 'titler'),
 (980047, 'Legionnaire Gurak', NULL, NULL, '72', '72', '0', '14732', '0', '0', '0', '29', '1', '0', '7', '3', '14', '0', '1', '36864', '0', 64+4096, '0', '1', '1.14286', '20', '0', '0', '0', '0', '1', '1', '1', '10', '1', '2', '1', '1', '1', '73800', '73800', '0', '0', '559', '720', '61.152', '84.084', '7387', '295', '100', '2000', '2000', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '14720', '0', '', 'crater_reinforcements_spawner'),
@@ -705,7 +717,7 @@ REPLACE INTO `creature_template` (`Entry`, `Name`, `SubName`, `IconName`, `MinLe
 (980015, 'Gems', '', '', 70, 70, 0, 23758, 0, 0, 0, 35, 1, 0, 7, 3, 3, 0, 128+1, 139394, 0, 2+33554432, 0, 0, 0, 20, 0, 0, 0, 0, 1, 0, -1, 1, 1, 1, 1, 1, 1, 1337, 1337, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26303, 0, '', 'multivendor'),
 (980014, 'Cat', '', '', 1, 1, 0, 5585, 5555, 5556, 5586, 188, 1, 0, 8, 1, 14, 0, 0, 0, 0, 64, 0, 1, 0.857143, 20, 0, 0, 0, 0, 1, 0, 0, 0.01, 1, 1, 1, 1.33333, 1, 8, 8, 0, 0, 2, 2, 1.76, 2.42, 20, 1, 100, 2000, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, '', ''),
 (980013, 'Arena Gear', 'Season 2', '', 70, 70, 0, 22393, 0, 0, 0, 35, 1, 0, 7, 3, 3, 0, 128+1, 139394, 0, 2+33554432, 0, 0, 0, 20, 0, 0, 0, 0, 1, 0, -1, 1, 1, 1, 1, 1, 1, 1337, 1337, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 980013, 0, '', 'multivendor'),
-(980012, 'Race Changer', '', '', 70, 70, 0, 15771, 15767, 15886, 15887, 35, 1, 0, 7, 3, 3, 0, 1, 139394, 0, 2, 0, 0, 0, 20, 0, 0, 0, 0, 1, 0, -1, 1, 1, 1, 1, 1, 1, 1337, 1337, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', 'racechanger'),
+(980012, 'Apperance Copier', '', '', 70, 70, 0, 15771, 15767, 15886, 15887, 35, 1, 0, 7, 3, 3, 0, 1, 139394, 0, 2, 0, 0, 0, 20, 0, 0, 0, 0, 1, 0, -1, 1, 1, 1, 1, 1, 1, 1337, 1337, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', 'appearance_copier'),
 (980011, 'Guild Creator', '', '', 70, 70, 0, 103, 0, 0, 0, 35, 1, 0, 7, 3, 3, 0, 129+524288, 139394, 0, 2, 0, 0, 0, 20, 0, 0, 0, 0, 1, 0, -1, 1, 1, 1, 1, 1, 1, 1337, 1337, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', 'guildcreator'),
 (980010, 'Avatar of the Elements', '', '', 70, 70, 0, 4607, 0, 0, 0, 35, 1, 0, 7, 3, 3, 0, 128, 139394, 0, 2, 0, 0, 0, 20, 0, 0, 0, 0, 1, 0, -1, 1, 1, 1, 1, 1, 1, 1337, 1337, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'EventAI', ''),
 (980009, 'Impy', 'Demon Trainer', '', 70, 70, 0, 911, 0, 0, 0, 35, 1, 0, 7, 3, 3, 0, 128+1, 139394, 0, 2+33554432, 0, 0, 0, 20, 0, 0, 0, 0, 1, 0, -1, 1, 1, 1, 1, 1, 1, 1337, 1337, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 980009, 0, '', 'multivendor'),
@@ -759,7 +771,8 @@ REPLACE INTO `creature_template` (`Entry`, `Name`, `SubName`, `IconName`, `MinLe
 (185001, 'MV - 185001', NULL, NULL, 70, 70, 0, 93, 0, 0, 0, 35, 1, 0, 0, 3, 3, 0, 128, 0, 0, 128, 0, 0, 0, 20, 0, 0, 0, 0, 1, 0, -1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', ''),
 (185000, 'MV - 185000', NULL, NULL, 70, 70, 0, 93, 0, 0, 0, 35, 1, 0, 0, 3, 3, 0, 128, 0, 0, 128, 0, 0, 0, 20, 0, 0, 0, 0, 1, 0, -1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '');
 
-UPDATE `creature_template` SET `DisplayIdProbability1`=100 WHERE entry BETWEEN 980001 AND 980049;
+SELECT MAX(`entry`) INTO @max_custom_creature_entry FROM `creature_template`;
+UPDATE `creature_template` SET `DisplayIdProbability1`=100 WHERE entry BETWEEN 980001 AND @max_custom_creature_entry;
 
 -- Set up data for battlemasters (repurposing Blizzlike templates)
 UPDATE `creature_template` SET `NpcFlags`=`NpcFlags`|1048576 WHERE `Entry` IN (14623,14879,15972,22516);
@@ -1042,7 +1055,6 @@ INSERT INTO `gameobject` (`guid`, `id`, `map`, `spawnMask`, `position_x`, `posit
 (@OGUID+247,400000,1,1,6675.0527,-4648.43,721.5831,6.11709, 0, 0, 0, 0, 1, 1), -- Everlook
 (@OGUID+248,400000,530,1,3084.555,3717.161,142.8485,4.9769, 0, 0, 0, 0, 1, 1); -- Area 52
 
-SELECT MAX(`entry`) INTO @max_custom_creature_entry FROM `creature_template`;
 DELETE FROM `creature` WHERE `id` BETWEEN 980000 AND @max_custom_creature_entry;
 DELETE FROM `creature` WHERE `id` IN (14623,14879,15972,22516); -- Battlemasters
 DELETE FROM `creature` WHERE `id` BETWEEN 185000 AND 185100; -- Multivendors
@@ -1073,7 +1085,7 @@ INSERT INTO `creature` (`guid`, `id`, `map`, `spawnMask`, `position_x`, `positio
 
 (@CGUID+034,980042,0,1,-11797.620117,-3182.739014,-30.257090,1.07644,25,25,0,0), -- Beginner Training Dummy
 (@CGUID+035,980042,0,1,-11809,-3219.39,-30.9315,5.12947,25,25,0,0), -- Beginner Training Dummy
-(@CGUID+036,980040,1,1,16239.99,16305.12,20.84,6.1818,25,25,0,0), -- Paul <Stylist>
+(@CGUID+036,980040,1,1,16239.99,16305.12,20.84,6.1818,25,25,0,0), -- Paul <Stylist> - GM Island
 (@CGUID+037,980032,0,1,4286.77,-2779.733,6.724,4.72,25,25,0,0), -- Transmogrification Beacon
 (@CGUID+038,980024,0,1,-11802.8135,-3215.177,-30.7,5.234,60,60,0,0), -- Alliance Enlistment Officer
 (@CGUID+039,980023,0,1,-11787.7,-3178.85,-29.7356,5.88474,60,60,0,0), -- Horde Enlistment Officer
@@ -1144,7 +1156,7 @@ INSERT INTO `creature` (`guid`, `id`, `map`, `spawnMask`, `position_x`, `positio
 (@CGUID+098,980019,0,1,4215.76,-2770.42,6.31771,5.58258,25,25,0,0), -- Novice Training Dummy
 (@CGUID+099,980021,0,1,4213.68,-2782.25,6.92849,0.09700,25,25,0,0), -- Grandmaster Training Dummy
 (@CGUID+100, 980013, 0, 1, 4302.177734, -2753.798828, 17.025675, 4.222574, 25, 25, 0, 0), -- Arena Gear <Season 2>
-(@CGUID+101, 980012, 0, 1, 4274.16, -2767.12, 6.15323, 1.53996, 25, 25, 0, 0), -- Race Changer
+(@CGUID+101, 980012, 0, 1, 4274.16, -2767.12, 6.15323, 1.53996, 25, 25, 0, 0), -- Appearance Copier
 (@CGUID+102, 980011, 0, 1, 4275.74, -2766.39, 6.13101, 2.43988, 25, 25, 0, 0), -- Guild Creator
 (@CGUID+103, 980033, 0, 1, 4284.32, -2763.95, 13.6069, 5.28552, 25, 25, 0, 0), -- Beastmaster
 (@CGUID+104, 980009, 0, 1, 4287.55, -2761.86, 15.003, 5.28552, 25, 25, 0, 0), -- Impy <Demon Trainer>
@@ -1180,7 +1192,12 @@ INSERT INTO `creature` (`guid`, `id`, `map`, `spawnMask`, `position_x`, `positio
 (@CGUID+134,980043,0,1,4223.45,-2730.8,5.20624,4.56957,25,25,0,2), -- Zip-a-dee-doo-dah <Model Viewer>
 (@CGUID+135,980046,37,1,1044.1,294.203,336.121,3.26387,25,25,0,0), -- Captain Benedict 
 (@CGUID+136,980047,37,1,75.2764,1134.73,367.176,5.46401,25,25,0,0), -- Legionnaire Gurak
-(@CGUID+137,980048,0,1,4258.983887,-2849.688965,12.222013,1.838977,25,25,5,1); -- Titler
+(@CGUID+137,980048,0,1,4258.983887,-2849.688965,12.222013,1.838977,25,25,5,1), -- Titler
+(@CGUID+138, 980040, 0, 1, 4277.69, -2765.19, 6.16084, 2.07458, 25, 25, 0, 0), -- Paul <Stylist> - Mall
+(@CGUID+139, 980050, 0, 1, 4279.69, -2764.52, 6.20221, 2.04709, 25, 25, 0, 0); -- Hans Müller <Shady Plastic Surgeon>
+
+SELECT `guid`, `id`, `map`, `spawnMask`, `position_x`, `position_y`, `position_z`, `orientation`, `spawntimesecsmin`, `spawntimesecsmax`, `spawndist`, `MovementType`
+FROM creature WHERE id IN (980050,980040);
 
 -- Grunt/Footman movement
 DELETE FROM creature_movement_template WHERE `entry` IN (980045,980044);
@@ -1756,12 +1773,13 @@ UPDATE `item_template` SET `bonding`=1, `ExtraFlags`=`ExtraFlags`|4, `Disenchant
 -- ======================================
 -- Custom Event #1 - MantisLord's Funland
 -- ======================================
-REPLACE INTO `game_event_creature` (`guid`, `event`) SELECT `guid`, @PTR_FUNSERVER_GAME_EVENT_ID FROM `creature` WHERE `id` IN (980048,980047,980046,980043,980041,980040,980039,980038,980037,980036,980035,980034,980033,980032,980029,980021,980020,980019,980018,980017,980016,980015,980014,980013,980012,980011,980010,980009,980008,980007,980006,980005,980004,980003,980002,980001);
+REPLACE INTO `game_event_creature` (`guid`, `event`) SELECT `guid`, @PTR_FUNSERVER_GAME_EVENT_ID FROM `creature` WHERE `id` IN (980050,980048,980047,980046,980043,980041,980040,980039,980038,980037,980036,980035,980034,980033,980032,980029,980021,980020,980019,980018,980017,980016,980015,980014,980013,980012,980011,980010,980009,980008,980007,980006,980005,980004,980003,980002,980001);
 REPLACE INTO `game_event_creature` (`guid`, `event`) SELECT `guid`, @PTR_FUNSERVER_GAME_EVENT_ID FROM `creature` WHERE `id` BETWEEN 185000 AND 185100; -- Multivendors
 REPLACE INTO `game_event_creature` (`guid`, `event`) SELECT `guid`, @PTR_FUNSERVER_GAME_EVENT_ID FROM `creature` WHERE `id` IN (14623,14879,15972,22516); -- Battlemasters
 REPLACE INTO `game_event_gameobject` (`guid`, `event`) SELECT `guid`, @PTR_FUNSERVER_GAME_EVENT_ID FROM `gameobject` WHERE `id` IN (400000,400001,400002,400004,400005,400006,400007,400008,400009,400010,400011,400012,400013,400014,400015,400016,400017,400018,400019,400020,400021,400022,400023,400024,400025,400026,400027,400030,400031,400032,400033,400034,400035,400036,400037,400038,400039,400040);
 REPLACE INTO `game_event_gameobject` (`guid`, `event`) VALUES (@OGUID+092, @PTR_FUNSERVER_GAME_EVENT_ID); -- Elevator 152614
 -- --------- CREATURES ---------
+-- Hans Müller <Shady Plastic Surgeon> 980050
 -- Titler 980048
 -- Legionnaire Gurak 980047
 -- Captain Benedict 980046
@@ -2925,4 +2943,66 @@ REPLACE INTO `npc_vendor` (`entry`, `item`, `maxcount`, `incrtime`, `ExtendedCos
 (185039, 21840, 0, 0, 0, 0, 'Bolt of Netherweave'),
 (185039, 21842, 0, 0, 0, 0, 'Bolt of Imbued Netherweave');
 
+-- allow Human Hunter
+DELETE FROM playercreateinfo WHERE `race`=1 AND `class`=3;
+INSERT INTO playercreateinfo (`race`, `class`, `map`, `zone`, `position_x`, `position_y`, `position_z`, `orientation`)
+SELECT `race`, 3 AS `class`, `map`, `zone`, position_x, position_y, position_z, orientation FROM playercreateinfo WHERE `race`=1 AND `class`=1;
+-- copy stats/spells from Night Elf Hunter
+DELETE FROM player_levelstats WHERE `race`=1 AND `class`=3;
+INSERT INTO player_levelstats (race, class, level, str, agi, sta, inte, spi)
+SELECT 1 AS `race`, `class`, `level`, `str`, `agi`, `sta`, `inte`, `spi` FROM player_levelstats WHERE `race`=4 AND `class`=3;
+
+DELETE FROM playercreateinfo_spell WHERE `race`=1 AND `class`=3;
+INSERT INTO `playercreateinfo_spell` (`race`, `class`, `Spell`, `Note`) VALUES 
+(1, 3, 75, 'Auto Shot'),
+(1, 3, 81, 'Dodge'),
+(1, 3, 203, 'Unarmed'),
+(1, 3, 204, 'Defense'),
+(1, 3, 266, 'Guns'),
+(1, 3, 522, 'SPELLDEFENSE (DND)'),
+(1, 3, 668, 'Language Common'),
+(1, 3, 1180, 'Daggers'),
+(1, 3, 2382, 'Generic'),
+(1, 3, 2479, 'Honorless Target'),
+(1, 3, 2973, 'Raptor Strike'),
+(1, 3, 3050, 'Detect'),
+(1, 3, 3365, 'Opening'),
+(1, 3, 6233, 'Closing'),
+(1, 3, 6246, 'Closing'),
+(1, 3, 6247, 'Opening'),
+(1, 3, 6477, 'Opening'),
+(1, 3, 6478, 'Opening'),
+(1, 3, 6603, 'Attack'),
+(1, 3, 7266, 'Duel'),
+(1, 3, 7267, 'Grovel'),
+(1, 3, 7355, 'Stuck'),
+(1, 3, 8386, 'Attacking'),
+(1, 3, 9077, 'Leather'),
+(1, 3, 9078, 'Cloth'),
+(1, 3, 9125, 'Generic'),
+(1, 3, 13358, 'Defensive State (DND)'),
+
+-- Human
+(1, 3, 20597, 'Sword Specialization'),
+(1, 3, 20598, 'The Human Spirit'),
+(1, 3, 20599, 'Diplomacy'),
+(1, 3, 20600, 'Perception'),
+(1, 3, 20864, 'Mace Specialization'),
+-- Night Elf
+-- (1, 3, 671, 'Language Darnassian'),
+-- (1, 3, 20580, 'Shadowmeld'),
+-- (1, 3, 20582, 'Quickness'),
+-- (1, 3, 20583, 'Nature Resistance'),
+-- (1, 3, 20585, 'Wisp Spirit'),
+-- (1, 3, 21009, 'Shadowmeld Passive'),
+
+(1, 3, 21651, 'Opening'),
+(1, 3, 21652, 'Closing'),
+(1, 3, 22027, 'Remove Insignia'),
+(1, 3, 22810, 'Opening - No Text'),
+(1, 3, 24949, 'Defensive State 2 (DND)'),
+(1, 3, 34082, 'Advantaged State (DND)'),
+(1, 3, 45927, 'Summon Friend');
+
+UPDATE spell_template SET EffectImplicitTargetA1=25 WHERE Id=11977; -- Rend -> TARGET_UNIT instead of TARGET_UNIT_ENEMY for RP scripting
 
