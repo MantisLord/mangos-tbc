@@ -63,7 +63,7 @@ maxStyles_t maxSkins[MAX_RACES] =
     {99,99},    // RACE_GNOME           = 7,
     {99,99},    // RACE_TROLL           = 8,
     {99,99},    // RACE_GOBLIN          = 9,
-    {99,99},    // RACE_BLOODELF        = 10,
+    {15,15},    // RACE_BLOODELF        = 10,
     {13,11},    // RACE_DRAENEI         = 11
 };
 

@@ -12,7 +12,7 @@ extern void AddSC_onevents();
 extern void AddSC_item_custom_dualspec();
 extern void AddSC_npc_custom_dualspec();
 extern void AddSC_multivendor();
-extern void AddSC_custom_creatures();
+extern void AddSC_custom_main();
 extern void AddSC_beastmaster();
 extern void AddSC_multitrainer();
 extern void AddSC_npc_transmogrify();
@@ -388,7 +388,7 @@ void AddScripts()
     AddSC_item_custom_dualspec();
     AddSC_npc_custom_dualspec();
     AddSC_multivendor();
-    AddSC_custom_creatures();
+    AddSC_custom_main();
     AddSC_beastmaster();
     AddSC_multitrainer();
     AddSC_npc_transmogrify();

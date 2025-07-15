@@ -42,71 +42,48 @@
     // CLASS_DEMON_HUNTER = 12,                            // not listed in DBC, will be in 7.0
 */
 
-// UNIT_FIELD_BYTES_0, 2 = gender (UNIT_BYTES_0_OFFSET_GENDER)
-// PLAYER_BYTES, 0 = skin
-// PLAYER_BYTES, 1 = face
-// PLAYER_BYTES, 2 = hair style
-// PLAYER_BYTES, 3 = hair color
-// PLAYER_BYTES_2, 0 = facial feature
-// PLAYER_BYTES_2, 1 = ???
-// PLAYER_BYTES_2, 2 = bank bag slot count (value of 7 grants all extra tabs)
-// PLAYER_BYTES_2, 3 = rest state
-// PLAYER_BYTES_3, 0 = gender + drunk state
-// PLAYER_BYTES_3, 1 = ???
-// PLAYER_BYTES_3, 2 = city protector title
-// PLAYER_BYTES_3, 3 = BattlefieldArenaFaction (0 or 1)
+enum
+{
+    NPC_TEXT_PLASTIC_SURGERY_SELECTIONS     = 42303,
+    NPC_TEXT_PLASTIC_SURGERY_MAIN_MENU_1    = 42304,
+    NPC_TEXT_PLASTIC_SURGERY_MAIN_MENU_2    = 42305,
+    NPC_TEXT_PLASTIC_SURGERY_MAIN_MENU_3    = 42306,
+    NPC_TEXT_PLASTIC_SURGERY_MAIN_MENU_4    = 42307,
+    NPC_TEXT_PLASTIC_SURGERY_RACE_CHANGE    = 42308,
+    SPELL_REND                              = 11977,
+};
 
 const int surgeonEmotes[4] = { EMOTE_ONESHOT_ATTACKUNARMED, EMOTE_ONESHOT_ATTACK1H, EMOTE_ONESHOT_ATTACK2HTIGHT, EMOTE_ONESHOT_ATTACK2HLOOSE };
 const int woundEmotes[2] = { EMOTE_ONESHOT_WOUND, EMOTE_ONESHOT_WOUNDCRITICAL };
 const int barberEmotes[3] = { EMOTE_ONESHOT_POINT, EMOTE_ONESHOT_READYBOW, EMOTE_ONESHOT_PARRYUNARMED };
-
-enum
-{
-    NPC_BARBER          = 980040,
-    NPC_PLASTIC_SURGEON = 980050,
-    SPELL_REND          = 11977,
-};
+const int surgeonMainMenuTexts[4] = { NPC_TEXT_PLASTIC_SURGERY_MAIN_MENU_1, NPC_TEXT_PLASTIC_SURGERY_MAIN_MENU_2, NPC_TEXT_PLASTIC_SURGERY_MAIN_MENU_3, NPC_TEXT_PLASTIC_SURGERY_MAIN_MENU_4 };
 
 static void PlaySurgeryVisual(Player* player, Creature* creature)
 {
-    creature->MonsterWhisper("Okay if you say so... Now hold still for me!", player);
     creature->SetFacingToObject(player);
     creature->HandleEmote(surgeonEmotes[urand(0, 3)]);
     creature->CastSpell(player, SPELL_REND, TRIGGERED_OLD_TRIGGERED);
     player->HandleEmote(woundEmotes[urand(0, 1)]);
 }
 
-static void ScriptedPlayerByteChange(Player* player, Creature* creature, uint16 index, uint8 offset, int changeAmount)
+static uint8 GetByteMaxValue(Player* player, uint16 index, uint8 offset)
 {
-    switch (creature->GetEntry())
-    {
-        case NPC_BARBER:
-        {
-            creature->HandleEmote(barberEmotes[urand(0, 2)]);
-            break;
-        }
-        case NPC_PLASTIC_SURGEON:
-        {
-            PlaySurgeryVisual(player, creature);
-            break;
-        }
-    }
     uint8 max = 255;
-    const char* byteIndexName = "UNKNOWN";
     switch (index)
     {
         case PLAYER_BYTES:
         {
-            byteIndexName = "PLAYER_BYTES";
             switch (offset)
             {
-                case 0: // skin
+                case 0:
                     max = maxSkins[player->getRace()].maxMale;
                     if (player->getGender() == GENDER_FEMALE)
                         max = maxSkins[player->getRace()].maxFemale;
                     break;
-                case 1: // face
-                    // todo: set real max here?
+                case 1:
+                    max = maxFaces[player->getRace()].maxMale;
+                    if (player->getGender() == GENDER_FEMALE)
+                        max = maxFaces[player->getRace()].maxFemale;
                     break;
                 case 2:
                     max = maxHairStyles[player->getRace()].maxMale;
@@ -121,7 +98,6 @@ static void ScriptedPlayerByteChange(Player* player, Creature* creature, uint16 
         }
         case PLAYER_BYTES_2:
         {
-            byteIndexName = "PLAYER_BYTES_2";
             if (offset == 0)
             {
                 max = maxFacialFeatures[player->getRace()].maxMale;
@@ -132,31 +108,33 @@ static void ScriptedPlayerByteChange(Player* player, Creature* creature, uint16 
         }
         case UNIT_FIELD_BYTES_0:
         {
-            byteIndexName = "UNIT_FIELD_BYTES_0";
             if (offset == UNIT_BYTES_0_OFFSET_GENDER)
-            {
                 max = 1;
-                player->SetUInt16Value(PLAYER_BYTES_3, 0, uint16(changeAmount == -1 ? GENDER_MALE : GENDER_FEMALE) | (player->GetDrunkValue() & 0xFFFE));
-            }
             break;
         }
     }
+    return max;
+}
 
-    int current = player->GetByteValue(index, offset);
-    int origVal = current;
-    
-    current += changeAmount;
-    if (current > max)
-        current = 0;
-    else if (current < 0)
-        current = max;
+static uint8 GetNextCustomizationIndex(uint8 current, uint8 max)
+{
+    return current + 1 > max ? 0 : current + 1;
+}
+static uint8 GetPrevCustomizationIndex(uint8 current, uint8 max)
+{
+    return current - 1 < 0 ? max : current - 1;
+}
 
-    static char buffer[128];
-    std::snprintf(buffer, sizeof(buffer), "%s_%u - prev %u | new %u", byteIndexName, offset, origVal, current);
-    const char* debugText = buffer;
-    creature->MonsterWhisper(debugText, player);
+static void UpdatePlayerByte(Player* player, Creature* creature, uint16 index, uint8 offset, bool isNext)
+{
+    uint8 currentVal = player->GetByteValue(index, offset);
+    uint8 maxVal = GetByteMaxValue(player, index, offset);
+    uint8 newVal = isNext ? GetNextCustomizationIndex(currentVal, maxVal) : GetPrevCustomizationIndex(currentVal, maxVal);
 
-    player->SetByteValue(index, offset, current);
+    if (index == UNIT_FIELD_BYTES_0 && offset == UNIT_BYTES_0_OFFSET_GENDER)
+        player->SetUInt16Value(PLAYER_BYTES_3, 0, uint16(newVal) | (player->GetDrunkValue() & 0xFFFE));
+
+    player->SetByteValue(index, offset, newVal);
 
     player->InitDisplayIds();
     player->SendCreateUpdateToPlayer(player);
@@ -165,23 +143,21 @@ static void ScriptedPlayerByteChange(Player* player, Creature* creature, uint16 
     player->GetSession()->SendPacket(data, true);
 }
 
-enum
+static const char* GetOptionText(bool isNext, char const* baseText, uint8 current, uint8 max)
 {
-    NPC_TEXT_PLASTIC_SURGERY_MAIN_MENU      = 42308,
-    NPC_TEXT_PLASTIC_SURGERY_RACE_CHANGE    = 42307,
-    NPC_TEXT_PLASTIC_SURGERY_FACE_LIFT      = 42303,
-};
+    uint8 next = GetNextCustomizationIndex(current, max);
+    uint8 prev = GetPrevCustomizationIndex(current, max);
+    static char textBuffer[128];
+    std::snprintf(textBuffer, sizeof(textBuffer), isNext ? "next %s [%u/%u] -- %u" : "prev %s [%u/%u] -- %u", baseText, current, max, isNext ? next : prev);
+    const char* text = textBuffer;
+    return text;
+}
 
 static bool GossipHello_plastic_surgeon(Player* player, Creature* creature)
 {
-    if (player->getGender() == GENDER_MALE)
-        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Gender reassignment: Female", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1000);
-    else
-        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Gender reassignment: Male", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1001);
-    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Change race", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1002);
-    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Next face", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1003);
-    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Previous face", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1003);
-    player->SEND_GOSSIP_MENU(NPC_TEXT_PLASTIC_SURGERY_MAIN_MENU, creature->GetObjectGuid());
+    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_1, "Begin character customization", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 100);
+    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Close", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 101);
+    player->SEND_GOSSIP_MENU(surgeonMainMenuTexts[urand(0, 3)], creature->GetObjectGuid());
     return true;
 }
 
@@ -189,49 +165,210 @@ static bool GossipSelect_plastic_surgeon(Player* player, Creature* creature, uin
 {
     switch (action)
     {
-        case GOSSIP_ACTION_INFO_DEF + 1000:
-        case GOSSIP_ACTION_INFO_DEF + 1001:
+        case GOSSIP_ACTION_INFO_DEF + 100:
         {
-            ScriptedPlayerByteChange(player, creature, UNIT_FIELD_BYTES_0, UNIT_BYTES_0_OFFSET_GENDER, action == GOSSIP_ACTION_INFO_DEF + 1000 ? 1 : -1);
-            GossipHello_plastic_surgeon(player, creature);
+            if (!player->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_HELM))
+                player->ToggleFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_HELM);
+
+            uint8 skin = player->GetByteValue(PLAYER_BYTES, 0);
+            uint8 skinMax = GetByteMaxValue(player, PLAYER_BYTES, 0);
+            uint8 face = player->GetByteValue(PLAYER_BYTES, 1);
+            uint8 faceMax = GetByteMaxValue(player, PLAYER_BYTES, 1);
+            uint8 hair = player->GetByteValue(PLAYER_BYTES, 2);
+            uint8 hairMax = GetByteMaxValue(player, PLAYER_BYTES, 2);
+            uint8 hairColor = player->GetByteValue(PLAYER_BYTES, 3);
+            uint8 hairColorMax = GetByteMaxValue(player, PLAYER_BYTES, 3);
+            uint8 faceFeature = player->GetByteValue(PLAYER_BYTES_2, 0);
+            uint8 faceFeatureMax = GetByteMaxValue(player, PLAYER_BYTES_2, 0);
+            
+            char const* hairText = "hair style";
+            if (player->getRace() == RACE_TAUREN)
+                hairText = "horns";
+            
+            char const* hairColorText = "hair color";
+            if (player->getRace() == RACE_TAUREN)
+                hairColorText = "horn color";
+
+            char const* faceFeatureText = "facial hair style";
+            switch (player->getRace())
+            {
+                case RACE_ORC:
+                case RACE_HUMAN:
+                    if (player->getGender() == GENDER_FEMALE)
+                        faceFeatureText = "piercings";
+                    break;
+                case RACE_DWARF:
+                case RACE_GNOME:
+                case RACE_BLOODELF:
+                    if (player->getGender() == GENDER_FEMALE)
+                        faceFeatureText = "earrings";
+                    break;
+                case RACE_NIGHTELF:
+                    if (player->getGender() == GENDER_FEMALE)
+                        faceFeatureText = "tattoos";
+                    break;
+                case RACE_UNDEAD:
+                    faceFeatureText = "head accessory";
+                    break;
+                case RACE_TAUREN:
+                    if (player->getGender() == GENDER_FEMALE)
+                        faceFeatureText = "hair";
+                    break;
+                case RACE_TROLL:
+                    faceFeatureText = "tusks";
+                    break;
+                case RACE_DRAENEI:
+                    player->getGender() == GENDER_FEMALE ? faceFeatureText = "horns" : faceFeatureText = "tentacles";
+                    break;
+            }
+            if (player->getGender() == GENDER_MALE)
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_1, "Gender reassignment: Female", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1000);
+            else
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_1, "Gender reassignment: Male", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1001);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Change race", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1002);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_1, GetOptionText(true, "skin", skin, skinMax), GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1003);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_1, GetOptionText(false, "skin", skin, skinMax), GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1004);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_1, GetOptionText(true, "face", face, faceMax), GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1005);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_1, GetOptionText(false, "face", face, faceMax), GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1006);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_1, GetOptionText(true, hairText, hair, hairMax), GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1007);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_1, GetOptionText(false, hairText, hair, hairMax), GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1008);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_1, GetOptionText(true, hairColorText, hairColor, hairColorMax), GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1009);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_1, GetOptionText(false, hairColorText, hairColor, hairColorMax), GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1010);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_1, GetOptionText(true, faceFeatureText, faceFeature, faceFeatureMax), GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1011);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_1, GetOptionText(false, faceFeatureText, faceFeature, faceFeatureMax), GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1012);
+            player->SEND_GOSSIP_MENU(NPC_TEXT_PLASTIC_SURGERY_SELECTIONS, creature->GetObjectGuid());
+            return true;
+        }
+        case GOSSIP_ACTION_INFO_DEF + 101:
+        {
+            player->CLOSE_GOSSIP_MENU();
+            return true;
+        }
+        case GOSSIP_ACTION_INFO_DEF + 1000: // next gender
+        case GOSSIP_ACTION_INFO_DEF + 1001: // prev gender
+        {
+            PlaySurgeryVisual(player, creature);
+            UpdatePlayerByte(player, creature, UNIT_FIELD_BYTES_0, UNIT_BYTES_0_OFFSET_GENDER, action == GOSSIP_ACTION_INFO_DEF + 1000 ? true : false);
+            GossipSelect_plastic_surgeon(player, creature, sender, GOSSIP_ACTION_INFO_DEF + 100);
             return true;
         }
         case GOSSIP_ACTION_INFO_DEF + 1002:
         {
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Human", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_HUMAN);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Orc", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_ORC);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Dwarf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_DWARF);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Night Elf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_NIGHTELF);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Undead", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_UNDEAD);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Tauren", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_TAUREN);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Gnome", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_GNOME);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Troll", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_TROLL);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Blood Elf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_BLOODELF);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Draenei", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_DRAENEI);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Return to main menu", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1100);
+            switch (player->getClass())
+            {
+                case CLASS_WARRIOR:
+                    if (player->getRace() != RACE_HUMAN) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Human", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_HUMAN);
+                    if (player->getRace() != RACE_ORC) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Orc", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_ORC);
+                    if (player->getRace() != RACE_DWARF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Dwarf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_DWARF);
+                    if (player->getRace() != RACE_NIGHTELF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Night Elf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_NIGHTELF);
+                    if (player->getRace() != RACE_UNDEAD) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Undead", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_UNDEAD);
+                    if (player->getRace() != RACE_TAUREN) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Tauren", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_TAUREN);
+                    if (player->getRace() != RACE_GNOME) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Gnome", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_GNOME);
+                    if (player->getRace() != RACE_TROLL) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Troll", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_TROLL);
+                    if (player->getRace() != RACE_DRAENEI) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Draenei", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_DRAENEI);
+                    break;
+                case CLASS_PALADIN:
+                    if (player->getRace() != RACE_HUMAN) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Human", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_HUMAN);
+                    if (player->getRace() != RACE_DWARF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Dwarf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_DWARF);
+                    if (player->getRace() != RACE_DRAENEI) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Draenei", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_DRAENEI);
+                    if (player->getRace() != RACE_BLOODELF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Blood Elf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_BLOODELF);
+                    break;
+                case CLASS_HUNTER:
+                    if (player->getRace() != RACE_ORC) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Orc", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_ORC);
+                    if (player->getRace() != RACE_DWARF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Dwarf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_DWARF);
+                    if (player->getRace() != RACE_NIGHTELF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Night Elf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_NIGHTELF);
+                    if (player->getRace() != RACE_TAUREN) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Tauren", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_TAUREN);
+                    if (player->getRace() != RACE_TROLL) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Troll", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_TROLL);
+                    if (player->getRace() != RACE_DRAENEI) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Draenei", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_DRAENEI);
+                    if (player->getRace() != RACE_BLOODELF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Blood Elf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_BLOODELF);
+                    break;
+                case CLASS_ROGUE:
+                    if (player->getRace() != RACE_HUMAN) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Human", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_HUMAN);
+                    if (player->getRace() != RACE_ORC) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Orc", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_ORC);
+                    if (player->getRace() != RACE_DWARF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Dwarf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_DWARF);
+                    if (player->getRace() != RACE_NIGHTELF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Night Elf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_NIGHTELF);
+                    if (player->getRace() != RACE_UNDEAD) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Undead", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_UNDEAD);
+                    if (player->getRace() != RACE_GNOME) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Gnome", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_GNOME);
+                    if (player->getRace() != RACE_TROLL) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Troll", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_TROLL);
+                    if (player->getRace() != RACE_BLOODELF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Blood Elf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_BLOODELF);
+                    break;
+                case CLASS_PRIEST:
+                    if (player->getRace() != RACE_HUMAN) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Human", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_HUMAN);
+                    if (player->getRace() != RACE_DWARF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Dwarf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_DWARF);
+                    if (player->getRace() != RACE_NIGHTELF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Night Elf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_NIGHTELF);
+                    if (player->getRace() != RACE_UNDEAD) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Undead", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_UNDEAD);
+                    if (player->getRace() != RACE_BLOODELF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Blood Elf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_BLOODELF);
+                    break;
+                case CLASS_SHAMAN:
+                    if (player->getRace() != RACE_ORC) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Orc", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_ORC);
+                    if (player->getRace() != RACE_TAUREN) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Tauren", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_TAUREN);
+                    if (player->getRace() != RACE_TROLL) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Troll", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_TROLL);
+                    if (player->getRace() != RACE_DRAENEI) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Draenei", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_DRAENEI);
+                    if (player->getRace() != RACE_BLOODELF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Blood Elf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_BLOODELF);
+                    break;
+                case CLASS_MAGE:
+                    if (player->getRace() != RACE_HUMAN) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Human", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_HUMAN);
+                    if (player->getRace() != RACE_UNDEAD) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Undead", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_UNDEAD);
+                    if (player->getRace() != RACE_GNOME) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Gnome", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_GNOME);
+                    if (player->getRace() != RACE_TROLL) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Troll", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_TROLL);
+                    if (player->getRace() != RACE_DRAENEI) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Draenei", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_DRAENEI);
+                    if (player->getRace() != RACE_BLOODELF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Blood Elf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_BLOODELF);
+                    break;
+                case CLASS_WARLOCK:
+                    if (player->getRace() != RACE_HUMAN) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Human", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_HUMAN);
+                    if (player->getRace() != RACE_UNDEAD) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Undead", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_UNDEAD);
+                    if (player->getRace() != RACE_GNOME) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Gnome", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_GNOME);
+                    if (player->getRace() != RACE_TROLL) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Troll", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_TROLL);
+                    if (player->getRace() != RACE_DRAENEI) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Draenei", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_DRAENEI);
+                    if (player->getRace() != RACE_BLOODELF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Blood Elf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_BLOODELF);
+                    break;
+                case CLASS_DRUID:
+                    if (player->getRace() != RACE_NIGHTELF) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Night Elf", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_NIGHTELF);
+                    if (player->getRace() != RACE_TAUREN) player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Tauren", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + RACE_TAUREN);
+                    break;
+            }
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Return to main menu", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 100);
             player->SEND_GOSSIP_MENU(NPC_TEXT_PLASTIC_SURGERY_RACE_CHANGE, creature->GetObjectGuid());
             return true;
         }
-        case GOSSIP_ACTION_INFO_DEF + 1003:
+        case GOSSIP_ACTION_INFO_DEF + 1003: // next skin
+        case GOSSIP_ACTION_INFO_DEF + 1004: // prev skin
         {
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Next face", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1004);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Previous face", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1005);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Return to main menu", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1100);
-            player->SEND_GOSSIP_MENU(NPC_TEXT_PLASTIC_SURGERY_FACE_LIFT, creature->GetObjectGuid());
+            PlaySurgeryVisual(player, creature);
+            UpdatePlayerByte(player, creature, PLAYER_BYTES, 0, action == GOSSIP_ACTION_INFO_DEF + 1003 ? true : false);
+            GossipSelect_plastic_surgeon(player, creature, sender, GOSSIP_ACTION_INFO_DEF + 100);
             return true;
         }
-        // next/previous face
-        case GOSSIP_ACTION_INFO_DEF + 1004:
-        case GOSSIP_ACTION_INFO_DEF + 1005:
+        case GOSSIP_ACTION_INFO_DEF + 1005: // next face
+        case GOSSIP_ACTION_INFO_DEF + 1006: // prev face
         {
-            ScriptedPlayerByteChange(player, creature, PLAYER_BYTES, 1, action == GOSSIP_ACTION_INFO_DEF + 1004 ? 1 : -1);
-            GossipSelect_plastic_surgeon(player, creature, sender, GOSSIP_ACTION_INFO_DEF + 1003);
+            PlaySurgeryVisual(player, creature);
+            UpdatePlayerByte(player, creature, PLAYER_BYTES, 1, action == GOSSIP_ACTION_INFO_DEF + 1005 ? true : false);
+            GossipSelect_plastic_surgeon(player, creature, sender, GOSSIP_ACTION_INFO_DEF + 100);
             return true;
         }
-        // return to main menu
-        case GOSSIP_ACTION_INFO_DEF + 1100:
+        case GOSSIP_ACTION_INFO_DEF + 1007: // next hair
+        case GOSSIP_ACTION_INFO_DEF + 1008: // prev hair
         {
-            GossipHello_plastic_surgeon(player, creature);
+            creature->HandleEmote(barberEmotes[urand(0, 2)]);
+            UpdatePlayerByte(player, creature, PLAYER_BYTES, 2, action == GOSSIP_ACTION_INFO_DEF + 1007 ? true : false);
+            GossipSelect_plastic_surgeon(player, creature, sender, GOSSIP_ACTION_INFO_DEF + 100);
+            return true;
+        }
+        case GOSSIP_ACTION_INFO_DEF + 1009: // next hair color
+        case GOSSIP_ACTION_INFO_DEF + 1010: // prev hair color
+        {
+            creature->HandleEmote(barberEmotes[urand(0, 2)]);
+            UpdatePlayerByte(player, creature, PLAYER_BYTES, 3, action == GOSSIP_ACTION_INFO_DEF + 1009 ? true : false);
+            GossipSelect_plastic_surgeon(player, creature, sender, GOSSIP_ACTION_INFO_DEF + 100);
+            return true;
+        }
+        case GOSSIP_ACTION_INFO_DEF + 1011: // next face feature
+        case GOSSIP_ACTION_INFO_DEF + 1012: // prev face facture
+        {
+            creature->HandleEmote(barberEmotes[urand(0, 2)]);
+            UpdatePlayerByte(player, creature, PLAYER_BYTES_2, 0, action == GOSSIP_ACTION_INFO_DEF + 1011 ? true : false);
+            GossipSelect_plastic_surgeon(player, creature, sender, GOSSIP_ACTION_INFO_DEF + 100);
             return true;
         }
         default:
@@ -240,7 +377,7 @@ static bool GossipSelect_plastic_surgeon(Player* player, Creature* creature, uin
                 player->GetSession()->SendNotification("Invalid race for class.");
             else
                 PlaySurgeryVisual(player, creature);
-            GossipHello_plastic_surgeon(player, creature);
+            GossipSelect_plastic_surgeon(player, creature, sender, GOSSIP_ACTION_INFO_DEF + 1002);
             return true;
     }
 }
@@ -343,115 +480,6 @@ static bool GossipSelectWithCode_appearance_copier(Player* player, Creature* cre
         return true;
     }
     return false;
-}
-
-enum
-{
-    GOSSIP_SENDER_OPTION            = 50,
-    GOSSIP_SENDER_SUBOPTION         = 51,
-    NPC_TEXT_BARBER_GREET_HORDE     = 99996, // broadcast text 29498
-    NPC_TEXT_BARBER_GREET_ALLIANCE  = 99997, // broadcast text 29495
-    NPC_TEXT_BARBER_MAIN_MENU       = 42306,
-    NPC_TEXT_BARBER_SUB_MENU        = 42305,
-    NPC_TEXT_BARBER_SPRAY_TAN       = 42304,
-};
-
-static bool GossipHello_barber(Player* player, Creature* barber)
-{
-    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Give me a makeover!", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
-    player->SEND_GOSSIP_MENU(player->GetTeam() == HORDE ? NPC_TEXT_BARBER_GREET_HORDE : NPC_TEXT_BARBER_GREET_ALLIANCE, barber->GetObjectGuid());
-    return true;
-}
-
-static bool GossipSelect_barber(Player* player, Creature* barber, uint32 sender, uint32 action)
-{
-    char const* menuOption1 = "I want to change my hair style.";
-    if (player->getRace() == RACE_TAUREN)
-        menuOption1 = "I want to change my horns.";
-    char const* menuOption2 = "I want to change my hair color.";
-    if (player->getRace() == RACE_TAUREN)
-        menuOption2 = "I want to change my horn color.";
-    char const* menuOption3 = "I want to change my facial hair style.";
-    switch (player->getRace())
-    {
-        case RACE_ORC:
-        case RACE_HUMAN:
-            if (player->getGender() == GENDER_FEMALE)
-                menuOption3 = "I want to change my piercings.";
-            break;
-        case RACE_DWARF:
-        case RACE_GNOME:
-        case RACE_BLOODELF:
-            if (player->getGender() == GENDER_FEMALE)
-                menuOption3 = "I want to change my earrings.";
-            break;
-        case RACE_NIGHTELF:
-            if (player->getGender() == GENDER_FEMALE)
-                menuOption3 = "I want to change my markings.";
-            break;
-        case RACE_UNDEAD:
-            menuOption3 = "I want to change my head accessory.";
-            break;
-        case RACE_TAUREN:
-            if (player->getGender() == GENDER_FEMALE)
-                menuOption3 = "I want to change my hair.";
-            break;
-        case RACE_TROLL:
-            menuOption3 = "I want to change my tusks.";
-            break;
-        case RACE_DRAENEI:
-            player->getGender() == GENDER_FEMALE ? menuOption3 = "I want to change my horns." : menuOption3 = "I want to change my tentacles.";
-            break;
-    }
-    switch (action)
-    {
-        case GOSSIP_ACTION_INFO_DEF + 1: // main menu
-            if (!player->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_HELM))
-                player->ToggleFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_HELM);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, menuOption1, GOSSIP_SENDER_OPTION, GOSSIP_ACTION_INFO_DEF + 2);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, menuOption2, GOSSIP_SENDER_OPTION, GOSSIP_ACTION_INFO_DEF + 4);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, menuOption3, GOSSIP_SENDER_OPTION, GOSSIP_ACTION_INFO_DEF + 6);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Give me a spray tan.", GOSSIP_SENDER_OPTION, GOSSIP_ACTION_INFO_DEF + 8);
-            player->SEND_GOSSIP_MENU(NPC_TEXT_BARBER_MAIN_MENU, barber->GetObjectGuid());
-            break;
-        case GOSSIP_ACTION_INFO_DEF + 2: // next hair style
-        case GOSSIP_ACTION_INFO_DEF + 3: // previous hair style
-            if (sender == GOSSIP_SENDER_SUBOPTION)
-                ScriptedPlayerByteChange(player, barber, PLAYER_BYTES, 2, action == GOSSIP_ACTION_INFO_DEF + 2 ? 1 : -1);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Next style", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 2);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Previous style", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 3);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Return to alterations menu", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 1);
-            player->SEND_GOSSIP_MENU(NPC_TEXT_BARBER_SUB_MENU, barber->GetObjectGuid());
-            break;
-        case GOSSIP_ACTION_INFO_DEF + 4: // next hair color
-        case GOSSIP_ACTION_INFO_DEF + 5: // previous hair color
-            if (sender == GOSSIP_SENDER_SUBOPTION)
-                ScriptedPlayerByteChange(player, barber, PLAYER_BYTES, 3, action == GOSSIP_ACTION_INFO_DEF + 4 ? 1 : -1);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Next color", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 4);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Previous color", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 5);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Return to alterations menu", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 1);
-            player->SEND_GOSSIP_MENU(NPC_TEXT_BARBER_SUB_MENU, barber->GetObjectGuid());
-            break;
-        case GOSSIP_ACTION_INFO_DEF + 6: // next facial feature
-        case GOSSIP_ACTION_INFO_DEF + 7: // previous facial feature
-            if (sender == GOSSIP_SENDER_SUBOPTION)
-                ScriptedPlayerByteChange(player, barber, PLAYER_BYTES_2, 0, action == GOSSIP_ACTION_INFO_DEF + 6 ? 1 : -1);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Next feature", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 6);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Previous feature", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 7);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Return to alterations menu", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 1);
-            player->SEND_GOSSIP_MENU(NPC_TEXT_BARBER_SUB_MENU, barber->GetObjectGuid());
-            break;
-        case GOSSIP_ACTION_INFO_DEF + 8: // next skin tone
-        case GOSSIP_ACTION_INFO_DEF + 9: // previous skin tone
-            if (sender == GOSSIP_SENDER_SUBOPTION)
-                ScriptedPlayerByteChange(player, barber, PLAYER_BYTES, 0, action == GOSSIP_ACTION_INFO_DEF + 8 ? 1 : -1);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Next skin tone", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 8);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Previous skin tone", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 9);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Return to alterations menu", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 1);
-            player->SEND_GOSSIP_MENU(NPC_TEXT_BARBER_SPRAY_TAN, barber->GetObjectGuid());
-            break;
-    }
-    return true;
 }
 
 enum
@@ -1277,6 +1305,8 @@ void BoostPlayer(Player* player, uint32 targetLevel)
     player->SaveToDB();
 }
 
+// todo: make and load new table - custom_gear_set: set_id, item_id, enchant_id/spell_id?, gem_1, gem_2, gem_3, gem_4?, comment
+// 
 // Instant 70
 //                                                          head    shoulders   chest   hands   legs
 const std::vector<uint32> PlatePrimaryGear              = { 12423,  12407,      15141,  14694,  32171 };
@@ -3501,7 +3531,7 @@ bool GossipSelect_crater_reinforcements_spawner(Player* player, Creature* creatu
     return true;
 }
 
-void AddSC_custom_creatures()
+void AddSC_custom_main()
 {
     Script* newscript;
 
@@ -3515,12 +3545,6 @@ void AddSC_custom_creatures()
     newscript->Name = "appearance_copier";
     newscript->pGossipHello = &GossipHello_appearance_copier;
     newscript->pGossipSelectWithCode = &GossipSelectWithCode_appearance_copier;
-    newscript->RegisterSelf();
-
-    newscript = new Script;
-    newscript->Name = "barber";
-    newscript->pGossipHello = &GossipHello_barber;
-    newscript->pGossipSelect = &GossipSelect_barber;
     newscript->RegisterSelf();
 
     newscript = new Script;

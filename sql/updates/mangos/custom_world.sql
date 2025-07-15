@@ -164,12 +164,12 @@ INSERT INTO `npc_text` (`ID`, `text0_0`, `text0_1`, `lang0`, `prob0`, `em0_0`, `
 -- Beastmaster
 (42302, 'Select a beast below you''d like to tame.', 'Select a beast below you''d like to tame.', 0, 0, 1, 1, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
 -- Hans Müller <Shady Plastic Surgeon>
-(42303, 'Sagging? Wrinkles? Crooked nose? I''ll fix you right up.', 'Sagging? Wrinkles? Crooked nose? I''ll fix you right up.', 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
-(42304, 'I''ve got the chems here to turn you any shade you want. Let''s make you glisten and glow. Just keep in mind, once this stuff gets on you, it''s probably not ever coming off...', 'I''ve got the chems here to turn you any shade you want. Let''s make you glisten and glow. Just keep in mind, once this stuff gets on you, it''s probably not ever coming off...', 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
-(42305, '', '', 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
-(42306, 'You lookin'' for a big change in your life?\r\n\r\nI am the most qualified provider of special cosmetic operations in this region.', '\r\nYou lookin'' for a big change in your life?\r\n\r\nI am the most qualified provider of special cosmetic operations in this region.', 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
-(42307, '', '', 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
-(42308, 'Why settle for $r? Be who - or what - you were meant to be. New race, new life! No questions asked.', 'Why settle for $r? Be who - or what - you were meant to be. New race, new life! No questions asked.', 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+(42303, 'Choose your look.', 'Choose your look.', 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+(42304, 'Sagging? Wrinkles? Crooked nose? I''ll fix you right up.', 'Sagging? Wrinkles? Crooked nose? I''ll fix you right up.', 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+(42305, 'I''ve got the spray tan chems here to turn you any shade you want. Let''s make you glisten and glow. Just keep in mind, once this stuff gets on your skin, it''s probably not ever coming off...', 'I''ve got the spray tan chems here to turn you any shade you want. Let''s make you glisten and glow. Just keep in mind, once this stuff gets on your skin, it''s probably not ever coming off...', 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+(42306, 'Scared of the knife? We can start with just a trim.', 'Scared of the knife? We can start with just a trim.', 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+(42307, 'Why settle for $r? Be who - or what - you were meant to be. New race, new life! No questions asked.', 'Why settle for $r? Be who - or what - you were meant to be. New race, new life! No questions asked.', 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+(42308, 'This will be a bit of a doozy... I''ll try my best.\r\n\r\nWhich race we talkin''?', 'This will be a bit of a doozy... I''ll try my best.\r\n\r\nWhich race we talkin''?', 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
 -- Appearance Copier
 (42309, 'Hello $c.\r\n\r\nI can make you appear the same as someone else! Please provide the name of the character you want to assume the likeness of.\r\n\r\nThe character must be an eligible race for your class.', 'Hello $c.\r\n\r\nI can make you appear the same as someone else! Please provide the name of the character you want to assume the likeness of.\r\n\r\nThe character must be an eligible race for your class.', 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
 -- Guild Creator
@@ -256,12 +256,10 @@ INSERT INTO `npc_text` (`ID`, `text0_0`, `text0_1`, `lang0`, `prob0`, `em0_0`, `
 (50614,'Movement & Positioning','','0','1','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0'),
 (50615,'UNIT_BYTES_1_OFFSET_STAND_STATE (UnitStandStateType)','','0','1','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0');
 
-DELETE FROM `npc_text_broadcast_text` WHERE `Id` IN (99999,99998,99997,99996);
+DELETE FROM `npc_text_broadcast_text` WHERE `Id` IN (99999,99998);
 INSERT INTO `npc_text_broadcast_text` (`Id`, `Prob0`, `BroadcastTextId0`) VALUES
 (99999,1,13644), -- "Need something?"
-(99998,1,15251), -- "Which profession do you seek to learn?"
-(99997,1,29495), -- Barber (Alliance)
-(99996,1,29498); -- Barber (Horde)
+(99998,1,15251); -- "Which profession do you seek to learn?"
 
 DELETE FROM `script_texts` WHERE `entry` IN (-1800997,-1800998,-1800999);
 INSERT INTO `script_texts` (`entry`,`content_default`,`sound`,`type`,`language`,`emote`,`comment`) VALUES
@@ -687,7 +685,7 @@ REPLACE INTO `creature_template` (`Entry`, `Name`, `SubName`, `IconName`, `MinLe
 (980043, 'Zip-a-dee-doo-dah', 'Model Viewer', '', '69', '69', '0', '23766', '0', '0', '0', '35', '1', '0', '7', '3', '3', '0', '1', '0', '0', '0', '0', '1', '1.14286', '20', '0', '0', '0', '0', '1', '0', '0', '1', '1', '1', '1', '1', '1', '42', '42', '0', '0', '2', '2', '0', '0', '7', '11', '0', '2000', '2000', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', 'modelviewer'),
 (980042, 'Beginner Training Dummy', '', '', 55, 55, 0, 3019, 0, 0, 0, 7, 1, 0, 9, 3, 3, 0, 0, 0, 0, 64, 0, 1, 1.14286, 20, 0, 0, 0, 0, 1, 0, 1, 200, 1, 1, 1, 1, 1, 1397200, 1397200, 0, 0, 2, 2, 0, 0, 3136, 0, 0, 2000, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 8585235, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', 'npc_target_dummy'),
 (980041, 'Enchantment Crystal', '', '', '1', '1', '0', '22669', '22669', '22669', '22669', '35', '0.25', '0', '7', '3', '3', '0', '1', '0', '0', '0', '0', '1', '1.14286', '20', '0', '0', '0', '0', '1', '0', '0', '1', '1', '1', '1', '1', '1', '42', '42', '0', '0', '2', '2', '0', '0', '7', '11', '0', '2000', '2000', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', 'enchantment_crystal'),
-(980040, 'Paul', 'Stylist', '', '70', '70', '0', '23766', '0', '0', '0', '35', '1', '0', '7', '3', '3', '0', '1', '0', '0', '0', '0', '1', '1.14286', '20', '0', '0', '0', '0', '1', '0', '0', '1', '1', '1', '1', '1', '1', '42', '42', '0', '0', '2', '2', '0', '0', '7', '11', '0', '2000', '2000', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', 'barber'),
+(980040, 'Namechanger Ned', '', '', '70', '70', '0', '23766', '0', '0', '0', '35', '1', '0', '7', '3', '3', '0', '1', '0', '0', '0', '0', '1', '1.14286', '20', '0', '0', '0', '0', '1', '0', '0', '1', '1', '1', '1', '1', '1', '42', '42', '0', '0', '2', '2', '0', '0', '7', '11', '0', '2000', '2000', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', 'namechanger'),
 (980039, 'Spirit Healer', '', '', '60', '60', '0', '5233', '0', '0', '0', '35', '1', '0', '7', '1', '14', '0', '16385', '768', '0', '64', '2', '1', '1', '20', '0', '0', '0', '0', '1', '0', '0', '1.35', '1', '1', '1', '1', '1', '4900', '4900', '0', '0', '164', '212', '74.448', '102.366', '3791', '87', '100', '2000', '2000', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '83', 'EventAI', ''),
 (980038, 'Arena Battlemaster', '', NULL, '70', '70', '0', '23691', '0', '0', '0', '35', '1', '0', '7', '3', '14', '0', '1048577', '33024', '0', '64', '0', '1', '1.14286', '20', '0', '0', '0', '0', '1', '0', '1', '1', '1', '1', '1', '1', '1', '7200', '7200', '0', '0', '77', '117', '328.696', '458.231', '6792', '45', '100', '2000', '2000', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '8218', '', ''),
 (980037, 'Arena Organizer', '', '', '70', '70', '0', '24023', '0', '0', '0', '35', '1', '0', '7', '1', '14', '0', '262145', '768', '0', '0', '0', '1.1', '1.14286', '20', '0', '0', '0', '0', '1', '0', '1', '1', '1', '1', '1', '1', '1', '8300', '8300', '0', '0', '0', '0', '0', '0', '6792', '0', '0', '2000', '2000', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', ''),
@@ -1083,7 +1081,7 @@ INSERT INTO `creature` (`guid`, `id`, `map`, `spawnMask`, `position_x`, `positio
 
 (@CGUID+034,980042,0,1,-11797.620117,-3182.739014,-30.257090,1.07644,25,25,0,0), -- Beginner Training Dummy
 (@CGUID+035,980042,0,1,-11809,-3219.39,-30.9315,5.12947,25,25,0,0), -- Beginner Training Dummy
-(@CGUID+036,980040,1,1,16239.99,16305.12,20.84,6.1818,25,25,0,0), -- Paul <Stylist> - GM Island
+(@CGUID+036,980040,1,1,16239.99,16305.12,20.84,6.1818,25,25,0,0), -- Namechanger Ned - GM Island
 (@CGUID+037,980032,0,1,4286.77,-2779.733,6.724,4.72,25,25,0,0), -- Transmogrification Beacon
 (@CGUID+038,980024,0,1,-11802.8135,-3215.177,-30.7,5.234,60,60,0,0), -- Alliance Enlistment Officer
 (@CGUID+039,980023,0,1,-11787.7,-3178.85,-29.7356,5.88474,60,60,0,0), -- Horde Enlistment Officer
@@ -1191,7 +1189,7 @@ INSERT INTO `creature` (`guid`, `id`, `map`, `spawnMask`, `position_x`, `positio
 (@CGUID+135,980046,37,1,1044.1,294.203,336.121,3.26387,25,25,0,0), -- Captain Benedict 
 (@CGUID+136,980047,37,1,75.2764,1134.73,367.176,5.46401,25,25,0,0), -- Legionnaire Gurak
 (@CGUID+137,980048,0,1,4258.983887,-2849.688965,12.222013,1.838977,25,25,5,1), -- Titler
-(@CGUID+138, 980040, 0, 1, 4277.69, -2765.19, 6.16084, 2.07458, 25, 25, 0, 0), -- Paul <Stylist> - Mall
+(@CGUID+138, 980040, 0, 1, 4277.69, -2765.19, 6.16084, 2.07458, 25, 25, 0, 0), -- Ned Namechanger - Mall
 (@CGUID+139, 980050, 0, 1, 4279.69, -2764.52, 6.20221, 2.04709, 25, 25, 0, 0); -- Hans Müller <Shady Plastic Surgeon>
 
 SELECT `guid`, `id`, `map`, `spawnMask`, `position_x`, `position_y`, `position_z`, `orientation`, `spawntimesecsmin`, `spawntimesecsmax`, `spawndist`, `MovementType`
@@ -1783,7 +1781,7 @@ REPLACE INTO `game_event_gameobject` (`guid`, `event`) VALUES (@OGUID+092, @PTR_
 -- Captain Benedict 980046
 -- Zip-a-dee-doo-dah <Model Viewer> 980043
 -- Enchantment Crystal 980041
--- Paul <Stylist> 980040
+-- Namechanger Ned 980040
 -- Spirit Healer 980039
 -- Arena Battlemaster 980038
 -- Arena Organizer 980037
