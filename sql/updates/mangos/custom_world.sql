@@ -84,10 +84,11 @@ REPLACE INTO `game_event` (`entry`, `schedule_type`, `occurence`, `length`, `hol
 (@DUAL_SPECIALIZATION_EVENT_ID, 1, '201600', '201600', '0', 'Custom: Dual Specialization'),
 (@LEVEL_BOOST_GAME_EVENT_ID, 1, '201600', '201600', '0', 'Custom: Level Boost');
 REPLACE INTO `game_event_time` (`entry`, `start_time`, `end_time`) VALUES
-(@PTR_FUNSERVER_GAME_EVENT_ID, '2030-12-31 00:00:00', '2030-12-31 00:00:00'),
-(@DUAL_SPECIALIZATION_EVENT_ID, '2030-12-31 00:00:00', '2030-12-31 00:00:00'),
-(@LEVEL_BOOST_GAME_EVENT_ID, '2030-12-31 00:00:00', '2030-12-31 00:00:00');
--- Use worldstate command "boostrestriction" - don't start these child events manually
+(@PTR_FUNSERVER_GAME_EVENT_ID, '2010-12-31 00:00:00', '2030-12-31 00:00:00'),
+(@DUAL_SPECIALIZATION_EVENT_ID, '2010-12-31 00:00:00', '2030-12-31 00:00:00'),
+(@LEVEL_BOOST_GAME_EVENT_ID, '2010-12-31 00:00:00', '2030-12-31 00:00:00');
+-- Use command ".worldstate boostrestriction" - don't start these child events manually
+-- 1 - TBC Races, 2 - Horde Races, 4 - Alliance Races, 7 - All Races
 REPLACE INTO `game_event` (`entry`, `schedule_type`, `occurence`, `length`, `holiday`, `description`) VALUES
 (@LEVEL_BOOST_RESTRICT_TBC_RACES_EVENT_ID, 0, '201600', '201600', '0', 'Custom: Level Boost - TBC Race Restriction'), -- GAME_EVENT_LEVEL_BOOST_RESTRICTION_TBC_RACES 9001
 (@LEVEL_BOOST_RESTRICT_HORDE_RACES_EVENT_ID, 0, '201600', '201600', '0', 'Custom: Level Boost - Horde Race Restriction'), -- GAME_EVENT_LEVEL_BOOST_RESTRICTION_HORDE_RACES 9002
@@ -164,13 +165,11 @@ INSERT INTO `npc_text` (`ID`, `text0_0`, `text0_1`, `lang0`, `prob0`, `em0_0`, `
 (42302, 'Select a beast below you''d like to tame.', 'Select a beast below you''d like to tame.', 0, 0, 1, 1, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
 -- Hans Müller <Shady Plastic Surgeon>
 (42303, 'Sagging? Wrinkles? Crooked nose? I''ll fix you right up.', 'Sagging? Wrinkles? Crooked nose? I''ll fix you right up.', 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
--- Paul <Stylist> (Barber)
 (42304, 'I''ve got the chems here to turn you any shade you want. Let''s make you glisten and glow. Just keep in mind, once this stuff gets on you, it''s probably not ever coming off...', 'I''ve got the chems here to turn you any shade you want. Let''s make you glisten and glow. Just keep in mind, once this stuff gets on you, it''s probably not ever coming off...', 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
-(42305, 'Please make a selection.', 'Please make a selection.', 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
-(42306, 'What are you looking to get done specifically?', 'What are you looking to get done specifically?', 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
--- Hans Müller <Shady Plastic Surgeon> (cont.)
-(42307, 'Become a different race you say? This will be a bit of a doozy... I''ll try my best.\r\n\r\nWhich race we talkin''?', 'Become a different race you say? This will be a bit of a doozy... I''ll try my best.\r\n\r\nWhich race we talkin''?', 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
-(42308, 'Hey, $r! Over here!\r\nYou lookin'' for a big change in your life?\r\n\r\nI am the most qualified provider of special cosmetic operations in this region.\r\n\r\nNo questions, no refunds, and definitely no paper trail!', 'Hey, $r! Over here!\r\nYou lookin'' for a big change in your life?\r\n\r\nI am the most qualified provider of special cosmetic operations in this region.\r\n\r\nNo questions, no refunds, and definitely no paper trail!', 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+(42305, '', '', 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+(42306, 'You lookin'' for a big change in your life?\r\n\r\nI am the most qualified provider of special cosmetic operations in this region.', '\r\nYou lookin'' for a big change in your life?\r\n\r\nI am the most qualified provider of special cosmetic operations in this region.', 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+(42307, '', '', 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
+(42308, 'Why settle for $r? Be who - or what - you were meant to be. New race, new life! No questions asked.', 'Why settle for $r? Be who - or what - you were meant to be. New race, new life! No questions asked.', 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
 -- Appearance Copier
 (42309, 'Hello $c.\r\n\r\nI can make you appear the same as someone else! Please provide the name of the character you want to assume the likeness of.\r\n\r\nThe character must be an eligible race for your class.', 'Hello $c.\r\n\r\nI can make you appear the same as someone else! Please provide the name of the character you want to assume the likeness of.\r\n\r\nThe character must be an eligible race for your class.', 0, 0, 1, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0),
 -- Guild Creator
@@ -261,7 +260,6 @@ DELETE FROM `npc_text_broadcast_text` WHERE `Id` IN (99999,99998,99997,99996);
 INSERT INTO `npc_text_broadcast_text` (`Id`, `Prob0`, `BroadcastTextId0`) VALUES
 (99999,1,13644), -- "Need something?"
 (99998,1,15251), -- "Which profession do you seek to learn?"
--- Paul <Stylist>
 (99997,1,29495), -- Barber (Alliance)
 (99996,1,29498); -- Barber (Horde)
 

@@ -6,6 +6,7 @@
 #include "World/WorldState.h"
 #include "beastmaster.h"
 #include "azshara_crater.h"
+#include "custom_main.h"
 
 /*
     RACE_HUMAN              = 1,
@@ -66,59 +67,6 @@ enum
     SPELL_REND          = 11977,
 };
 
-typedef struct maxStyles_struct {
-    uint8 maxMale;
-    uint8 maxFemale;
-} maxStyles_t;
-
-maxStyles_t maxHairStyles[MAX_RACES] =
-{
-    {0,0},  //                        0
-    {11,18},// RACE_HUMAN           = 1,
-    {6,6},  // RACE_ORC             = 2,
-    {10,13},// RACE_DWARF           = 3,
-    {6,6},  // RACE_NIGHTELF        = 4,
-    {10,9}, // RACE_UNDEAD_PLAYER   = 5,
-    {7,6},  // RACE_TAUREN          = 6,
-    {6,6},  // RACE_GNOME           = 7,
-    {5,4},  // RACE_TROLL           = 8,
-    {0,0},  // RACE_GOBLIN          = 9,
-    {9,13}, // RACE_BLOODELF        = 10,
-    {7,10}, // RACE_DRAENEI         = 11
-};
-
-uint8 maxHairColor[MAX_RACES] =
-{
-    0,  //                        0
-    9,  // RACE_HUMAN           = 1,
-    7,  // RACE_ORC             = 2,
-    9,  // RACE_DWARF           = 3,
-    7,  // RACE_NIGHTELF        = 4,
-    9,  // RACE_UNDEAD_PLAYER   = 5,
-    2,  // RACE_TAUREN          = 6,
-    8,  // RACE_GNOME           = 7,
-    9,  // RACE_TROLL           = 8,
-    0,  // RACE_GOBLIN          = 9,
-    9,  // RACE_BLOODELF        = 10,
-    6,  // RACE_DRAENEI         = 11
-};
-
-maxStyles_t maxFacialFeatures[MAX_RACES] =
-{
-    {0,0},  //                        0
-    {8,6},  // RACE_HUMAN           = 1,
-    {10,6}, // RACE_ORC             = 2,
-    {10,5}, // RACE_DWARF           = 3,
-    {5,9},  // RACE_NIGHTELF        = 4,
-    {16,7}, // RACE_UNDEAD_PLAYER   = 5,
-    {6,4},  // RACE_TAUREN          = 6,
-    {7,6},  // RACE_GNOME           = 7,
-    {10,5}, // RACE_TROLL           = 8,
-    {0,0},  // RACE_GOBLIN          = 9,
-    {10,9}, // RACE_BLOODELF        = 10,
-    {7,6},  // RACE_DRAENEI         = 11
-};
-
 static void PlaySurgeryVisual(Player* player, Creature* creature)
 {
     creature->MonsterWhisper("Okay if you say so... Now hold still for me!", player);
@@ -128,7 +76,7 @@ static void PlaySurgeryVisual(Player* player, Creature* creature)
     player->HandleEmote(woundEmotes[urand(0, 1)]);
 }
 
-static void ScriptedPlayerByteChange(Player* player, Creature* creature, uint16 index, uint8 offset, int newVal)
+static void ScriptedPlayerByteChange(Player* player, Creature* creature, uint16 index, uint8 offset, int changeAmount)
 {
     switch (creature->GetEntry())
     {
@@ -153,8 +101,9 @@ static void ScriptedPlayerByteChange(Player* player, Creature* creature, uint16 
             switch (offset)
             {
                 case 0: // skin
-                    // todo: set real max here?
-                    max = 254;
+                    max = maxSkins[player->getRace()].maxMale;
+                    if (player->getGender() == GENDER_FEMALE)
+                        max = maxSkins[player->getRace()].maxFemale;
                     break;
                 case 1: // face
                     // todo: set real max here?
@@ -185,35 +134,27 @@ static void ScriptedPlayerByteChange(Player* player, Creature* creature, uint16 
         {
             byteIndexName = "UNIT_FIELD_BYTES_0";
             if (offset == UNIT_BYTES_0_OFFSET_GENDER)
-                player->SetUInt16Value(PLAYER_BYTES_3, 0, uint16(newVal) | (player->GetDrunkValue() & 0xFFFE));
-            break;
-        }
-        case PLAYER_BYTES_3:
-        {
-            byteIndexName = "PLAYER_BYTES_3";
+            {
+                max = 1;
+                player->SetUInt16Value(PLAYER_BYTES_3, 0, uint16(changeAmount == -1 ? GENDER_MALE : GENDER_FEMALE) | (player->GetDrunkValue() & 0xFFFE));
+            }
             break;
         }
     }
 
     int current = player->GetByteValue(index, offset);
+    int origVal = current;
+    
+    current += changeAmount;
+    if (current > max)
+        current = 0;
+    else if (current < 0)
+        current = max;
 
     static char buffer[128];
-    std::snprintf(buffer, sizeof(buffer), "current value for %s, offset %u is %u", byteIndexName, offset, current);
+    std::snprintf(buffer, sizeof(buffer), "%s_%u - prev %u | new %u", byteIndexName, offset, origVal, current);
     const char* debugText = buffer;
     creature->MonsterWhisper(debugText, player);
-
-    if (max != 255)
-    {
-        current += newVal;
-        if (current > max)
-            current = 0;
-        else if (current < 0)
-            current = max;
-    }
-    else
-    {
-        current = newVal;
-    }
 
     player->SetByteValue(index, offset, current);
 
@@ -234,11 +175,12 @@ enum
 static bool GossipHello_plastic_surgeon(Player* player, Creature* creature)
 {
     if (player->getGender() == GENDER_MALE)
-        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Make me female.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1000);
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Gender reassignment: Female", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1000);
     else
-        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Make me male.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1001);
-    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "I want to become a different race.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1002);
-    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "I need a facelift.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1003);
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Gender reassignment: Male", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1001);
+    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Change race", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1002);
+    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Next face", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1003);
+    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Previous face", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1003);
     player->SEND_GOSSIP_MENU(NPC_TEXT_PLASTIC_SURGERY_MAIN_MENU, creature->GetObjectGuid());
     return true;
 }
@@ -250,8 +192,7 @@ static bool GossipSelect_plastic_surgeon(Player* player, Creature* creature, uin
         case GOSSIP_ACTION_INFO_DEF + 1000:
         case GOSSIP_ACTION_INFO_DEF + 1001:
         {
-            Gender newGender = (action == GOSSIP_ACTION_INFO_DEF + 1000) ? GENDER_FEMALE : GENDER_MALE;
-            ScriptedPlayerByteChange(player, creature, UNIT_FIELD_BYTES_0, UNIT_BYTES_0_OFFSET_GENDER, newGender);
+            ScriptedPlayerByteChange(player, creature, UNIT_FIELD_BYTES_0, UNIT_BYTES_0_OFFSET_GENDER, action == GOSSIP_ACTION_INFO_DEF + 1000 ? 1 : -1);
             GossipHello_plastic_surgeon(player, creature);
             return true;
         }
@@ -283,9 +224,7 @@ static bool GossipSelect_plastic_surgeon(Player* player, Creature* creature, uin
         case GOSSIP_ACTION_INFO_DEF + 1004:
         case GOSSIP_ACTION_INFO_DEF + 1005:
         {
-            uint8 newVal = player->GetByteValue(PLAYER_BYTES, 1);
-            newVal += action == GOSSIP_ACTION_INFO_DEF + 1004 ? 1 : -1;
-            ScriptedPlayerByteChange(player, creature, PLAYER_BYTES, 1, newVal);
+            ScriptedPlayerByteChange(player, creature, PLAYER_BYTES, 1, action == GOSSIP_ACTION_INFO_DEF + 1004 ? 1 : -1);
             GossipSelect_plastic_surgeon(player, creature, sender, GOSSIP_ACTION_INFO_DEF + 1003);
             return true;
         }
@@ -451,7 +390,7 @@ static bool GossipSelect_barber(Player* player, Creature* barber, uint32 sender,
                 menuOption3 = "I want to change my markings.";
             break;
         case RACE_UNDEAD:
-            menuOption3 = "I want to change my face.";
+            menuOption3 = "I want to change my head accessory.";
             break;
         case RACE_TAUREN:
             if (player->getGender() == GENDER_FEMALE)
@@ -466,7 +405,7 @@ static bool GossipSelect_barber(Player* player, Creature* barber, uint32 sender,
     }
     switch (action)
     {
-        case GOSSIP_ACTION_INFO_DEF + 1:
+        case GOSSIP_ACTION_INFO_DEF + 1: // main menu
             if (!player->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_HELM))
                 player->ToggleFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_HELM);
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, menuOption1, GOSSIP_SENDER_OPTION, GOSSIP_ACTION_INFO_DEF + 2);
@@ -476,48 +415,36 @@ static bool GossipSelect_barber(Player* player, Creature* barber, uint32 sender,
             player->SEND_GOSSIP_MENU(NPC_TEXT_BARBER_MAIN_MENU, barber->GetObjectGuid());
             break;
         case GOSSIP_ACTION_INFO_DEF + 2: // next hair style
-            if (sender == GOSSIP_SENDER_SUBOPTION)
-                ScriptedPlayerByteChange(player, barber, PLAYER_BYTES, 2, 1);
-            [[fallthrough]];
         case GOSSIP_ACTION_INFO_DEF + 3: // previous hair style
-            if (action == GOSSIP_ACTION_INFO_DEF + 3 && sender == GOSSIP_SENDER_SUBOPTION)
-                ScriptedPlayerByteChange(player, barber, PLAYER_BYTES, 2, -1);
+            if (sender == GOSSIP_SENDER_SUBOPTION)
+                ScriptedPlayerByteChange(player, barber, PLAYER_BYTES, 2, action == GOSSIP_ACTION_INFO_DEF + 2 ? 1 : -1);
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Next style", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 2);
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Previous style", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 3);
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Return to alterations menu", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 1);
             player->SEND_GOSSIP_MENU(NPC_TEXT_BARBER_SUB_MENU, barber->GetObjectGuid());
             break;
         case GOSSIP_ACTION_INFO_DEF + 4: // next hair color
-            if (sender == GOSSIP_SENDER_SUBOPTION)
-                ScriptedPlayerByteChange(player, barber, PLAYER_BYTES, 3, 1);
-            [[fallthrough]];
         case GOSSIP_ACTION_INFO_DEF + 5: // previous hair color
-            if (action == GOSSIP_ACTION_INFO_DEF + 5 && sender == GOSSIP_SENDER_SUBOPTION)
-                ScriptedPlayerByteChange(player, barber, PLAYER_BYTES, 3, -1);
+            if (sender == GOSSIP_SENDER_SUBOPTION)
+                ScriptedPlayerByteChange(player, barber, PLAYER_BYTES, 3, action == GOSSIP_ACTION_INFO_DEF + 4 ? 1 : -1);
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Next color", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 4);
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Previous color", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 5);
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Return to alterations menu", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 1);
             player->SEND_GOSSIP_MENU(NPC_TEXT_BARBER_SUB_MENU, barber->GetObjectGuid());
             break;
         case GOSSIP_ACTION_INFO_DEF + 6: // next facial feature
-            if (sender == GOSSIP_SENDER_SUBOPTION)
-                ScriptedPlayerByteChange(player, barber, PLAYER_BYTES_2, 0, 1);
-            [[fallthrough]];
         case GOSSIP_ACTION_INFO_DEF + 7: // previous facial feature
-            if (action == GOSSIP_ACTION_INFO_DEF + 7 && sender == GOSSIP_SENDER_SUBOPTION)
-                ScriptedPlayerByteChange(player, barber, PLAYER_BYTES_2, 0, -1);
+            if (sender == GOSSIP_SENDER_SUBOPTION)
+                ScriptedPlayerByteChange(player, barber, PLAYER_BYTES_2, 0, action == GOSSIP_ACTION_INFO_DEF + 6 ? 1 : -1);
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Next feature", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 6);
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Previous feature", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 7);
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Return to alterations menu", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 1);
             player->SEND_GOSSIP_MENU(NPC_TEXT_BARBER_SUB_MENU, barber->GetObjectGuid());
             break;
         case GOSSIP_ACTION_INFO_DEF + 8: // next skin tone
-            if (sender == GOSSIP_SENDER_SUBOPTION)
-                ScriptedPlayerByteChange(player, barber, PLAYER_BYTES, 0, 1);
-            [[fallthrough]];
         case GOSSIP_ACTION_INFO_DEF + 9: // previous skin tone
-            if (action == GOSSIP_ACTION_INFO_DEF + 9 && sender == GOSSIP_SENDER_SUBOPTION)
-                ScriptedPlayerByteChange(player, barber, PLAYER_BYTES, 0, -1);
+            if (sender == GOSSIP_SENDER_SUBOPTION)
+                ScriptedPlayerByteChange(player, barber, PLAYER_BYTES, 0, action == GOSSIP_ACTION_INFO_DEF + 8 ? 1 : -1);
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Next skin tone", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 8);
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Previous skin tone", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 9);
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Return to alterations menu", GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 1);
